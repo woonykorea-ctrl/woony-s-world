@@ -111,6 +111,10 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .person .pr{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;font-size:12px;color:var(--dim)}
 .person .pr b{color:var(--text);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums}
 .person b.day{color:#ffcf8a}.person b.night{color:#8b93a7}
+button.ghost.now{font-size:12px;padding:7px 10px;color:var(--hot);border-color:rgba(255,162,74,.45);white-space:nowrap}
+button.ghost.now:hover{background:rgba(255,162,74,.14);color:var(--hot);border-color:var(--hot)}
+.group{min-width:0}
+@media (max-width:720px){#speedSeg{max-width:100%;overflow-x:auto;scrollbar-width:none}#speedSeg::-webkit-scrollbar{display:none}#bar .group:first-child{flex-wrap:wrap}}
 .sw.r{border-top-color:#ff4d4d}.sw.b{border-top-color:#4d94ff}.sw.o{border-top:2px dotted #ff9a3c}
 
 </style>
@@ -188,12 +192,16 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="row wrap">
     <div class="group"><label>재생 속도</label>
       <div class="seg" id="speedSeg">
+        <button data-s="0.0000115741" title="현실의 1초 = 시뮬레이션의 1초">실시간</button>
+        <button data-s="0.000694444" title="1초에 1분">1분/초</button>
+        <button data-s="0.0416667" title="1초에 1시간(하루 24초)">1시간/초</button>
         <button data-s="0.2">0.2일/초</button>
         <button data-s="1" class="on">1일/초</button>
         <button data-s="5">5일/초</button>
         <button data-s="20">20일/초</button>
         <button data-s="60">60일/초</button>
       </div>
+      <button id="btnNow" class="ghost now" title="오늘 날짜와 지금 한국 시각(KST)으로 맞추고 실시간으로 재생">지금 시각으로</button>
     </div>
     <div class="group"><label>빛 범위</label>
       <div class="seg" id="rangeSeg">
@@ -1306,6 +1314,16 @@ FE.sunState = T => {
   return { decl, rKm, phi, speed };
 };
 
+/* 오늘 날짜 + 지금 한국 시각(KST) → T (6/21 0시 기준 날수). 패널의 날짜 표시(2026-06-21 기준)와 같은 기준 */
+FE.nowT = (date = new Date()) => {
+  const p = {};
+  new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(date).forEach(x => { p[x.type] = +x.value; });
+  const days = Math.round((Date.UTC(p.year, p.month - 1, p.day) - Date.UTC(2026, 5, 21)) / 86400000);
+  const day = ((days % 365) + 365) % 365;
+  return day + (p.hour * 3600 + p.minute * 60 + p.second) / 86400;
+};
+
 FE.fmt = n => Math.round(n).toLocaleString('en-US');
 
 /* ===== 05 라벨(스프라이트) 공용 ===== */
@@ -1613,19 +1631,25 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
   const play = $('btnPlay'), slider = $('sDay');
   let dragging = false;
 
-  const setPlay = on => { state.playing = on; play.textContent = on ? '⏸ 일시정지' : '▶ 재생'; };
+  const setPlay = on => { if (!on) state.live = false; state.playing = on; play.textContent = on ? '⏸ 일시정지' : '▶ 재생'; };
   play.onclick = () => setPlay(!state.playing);
   addEventListener('keydown', e => { if (e.code === 'Space' && e.target.tagName !== 'BUTTON') { e.preventDefault(); setPlay(!state.playing); } });
 
   slider.addEventListener('pointerdown', () => dragging = true);
   addEventListener('pointerup', () => dragging = false);
   slider.addEventListener('input', () => {                  // 시각(하루 중)은 유지하고 날짜만 이동
+    state.live = false;
     state.T = parseInt(slider.value, 10) + (state.T - Math.floor(state.T));
     onChange();
   });
 
   const speedBtns = [...document.querySelectorAll('#speedSeg button')];
-  speedBtns.forEach(b => b.onclick = () => { state.speed = parseFloat(b.dataset.s); speedBtns.forEach(x => x.classList.toggle('on', x === b)); });
+  speedBtns.forEach(b => b.onclick = () => { state.live = false; state.speed = parseFloat(b.dataset.s); speedBtns.forEach(x => x.classList.toggle('on', x === b)); });
+
+  $('btnNow').onclick = () => {                              // 오늘 · 지금 한국 시각 → 실시간(1배) 재생
+    state.T = FE.nowT(); state.speed = parseFloat(speedBtns[0].dataset.s);
+    speedBtns.forEach((x, i) => x.classList.toggle('on', i === 0)); setPlay(true); state.live = true; onChange();   // live: 매 프레임 실제 시계(KST)에 맞춤 → 탭이 느려져도 어긋나지 않음
+  };
 
   const viewBtns = [...document.querySelectorAll('#viewSeg button[data-v]')], auto = $('btnAuto');
   const mark = v => viewBtns.forEach(x => x.classList.toggle('on', x.dataset.v === v));
@@ -1716,7 +1740,7 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.1);
-    if (state.playing) { state.T += dt * state.speed; if (state.T >= 365) state.T -= 365; refresh(); ui.sync(state.T); }
+    if (state.playing) { if (state.live) state.T = FE.nowT(); else { state.T += dt * state.speed; if (state.T >= 365) state.T -= 365; } refresh(); ui.sync(state.T); }
     if (tween) {
       tween.t = Math.min(1, tween.t + dt / 0.9); const e = 1 - Math.pow(1 - tween.t, 3);
       camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.fromT, new THREE.Vector3(0, 0, 0), e);
