@@ -1,0 +1,17 @@
+{
+  "name": "평면 지구 지도 모델 · 3D 태양 경로 시뮬레이터",
+  "short_name": "태양 경로",
+  "description": "평면 모델에서 태양이 하루·1년 동안 움직이는 경로와 필요한 속도를 3D로 보는 시뮬레이터",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05060a",
+  "theme_color": "#05060a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
