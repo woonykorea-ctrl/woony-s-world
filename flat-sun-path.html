@@ -53,7 +53,7 @@ button.ghost:hover{color:var(--text);border-color:#3a4256}
 
 .cmp{width:100%;border-collapse:collapse;font-size:12px}
 .cmp th{font-weight:500;color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-size:11px}
-.cmp td{padding:7px 6px;border-bottom:1px solid #1a1f2b;font-variant-numeric:tabular-nums}
+.cmp td{white-space:nowrap;padding:7px 6px;border-bottom:1px solid #1a1f2b;font-variant-numeric:tabular-nums}
 .cmp td:last-child,.cmp th:last-child{text-align:right}
 .cmp tr.on td{background:rgba(255,162,74,.12)}
 .cmp tr.on td:first-child{border-radius:6px 0 0 6px}.cmp tr.on td:last-child{border-radius:0 6px 6px 0}
@@ -114,43 +114,48 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 button.ghost.now{font-size:12px;padding:7px 10px;color:var(--hot);border-color:rgba(255,162,74,.45);white-space:nowrap}
 button.ghost.now:hover{background:rgba(255,162,74,.14);color:var(--hot);border-color:var(--hot)}
 .group{min-width:0}
-@media (max-width:720px){#speedSeg{max-width:100%;overflow-x:auto;scrollbar-width:none}#speedSeg::-webkit-scrollbar{display:none}#bar .group:first-child{flex-wrap:wrap}}
+@media (max-width:720px){#speedSeg,#rangeSeg{max-width:100%;overflow-x:auto;scrollbar-width:none}#speedSeg::-webkit-scrollbar,#rangeSeg::-webkit-scrollbar{display:none}#bar .group:first-child{flex-wrap:wrap}}
 .sw.r{border-top-color:#ff4d4d}.sw.b{border-top-color:#4d94ff}.sw.o{border-top:2px dotted #ff9a3c}
 
+.p-head .btns{display:flex;gap:6px}
+#citySel{max-width:176px;background:#10131c;color:var(--text);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;padding:6px 8px}
+#citySel:focus{outline:1px solid var(--hot)}
+#citySel optgroup{color:#8b93a7;font-style:normal}
+#citySel option{color:#e8ebf2;background:#10131c}
 </style>
 </head>
 <body>
 <div id="stage"></div>
 
 <header id="title">
-  <h1>평면 모델 · 태양의 경로</h1>
-  <p>북극 중심 정거방위도법 · 위도 1° = 111.2 km</p>
+  <h1 data-i18n="title">평면 모델 · 태양의 경로</h1>
+  <p data-i18n="subtitle">북극 중심 정거방위도법 · 위도 1° = 111.2 km</p>
 </header>
 
-<aside id="panel" aria-label="실시간 정보 패널">
+<aside id="panel" data-i18n-aria="panelAria" aria-label="실시간 정보 패널">
   <div class="p-head">
-    <span>실시간 정보</span>
-    <button id="panelToggle" class="ghost" aria-label="패널 접기">접기</button>
+    <span data-i18n="live">실시간 정보</span>
+    <span class="btns"><button id="btnLang" class="ghost" aria-label="Language">EN</button><button id="panelToggle" class="ghost" aria-label="패널 접기">접기</button></span>
   </div>
   <div id="panelBody">
     <div class="clock">
       <div class="date" id="vDate">6월 21일</div>
       <div class="time" id="vTime">12:00</div>
     </div>
-    <div class="sub">시각은 사람(북위 37.5°)이 서 있는 경도 기준 태양시</div>
+    <div class="sub" id="vSub">시각은 서울(북위 37.5°) 현지 기준 태양시</div>
 
     <dl class="rows">
-      <div><dt>태양 바로 밑 위도</dt><dd id="vLat">북위 23.44°</dd></div>
-      <div><dt>북극에서의 거리</dt><dd id="vR">7,401 km</dd></div>
-      <div><dt>태양이 내야 하는 속도</dt><dd id="vV" class="hot">1,938 km/h</dd></div>
+      <div><dt data-i18n="rLat">태양 바로 밑 위도</dt><dd id="vLat">북위 23.44°</dd></div>
+      <div><dt data-i18n="rR">북극에서의 거리</dt><dd id="vR">7,401 km</dd></div>
+      <div><dt data-i18n="rV">태양이 내야 하는 속도</dt><dd id="vV" class="hot">1,938 km/h</dd></div>
     </dl>
     <div class="formula">v = 2πr ÷ 24 h</div>
 
     <div class="person">
-      <div class="ph">북위 37.5° 사람 기준</div>
-      <div class="pr"><span>태양 바로 밑까지 거리</span><b id="vPd">—</b></div>
-      <div class="pr"><span>태양 고도(평면 기하)</span><b id="vPe">—</b></div>
-      <div class="pr"><span>선택한 빛 범위 기준</span><b id="vPs" class="day">—</b></div>
+      <div class="ph" id="vPh">서울 · 북위 37.5° 사람 기준</div>
+      <div class="pr"><span data-i18n="pD">태양 바로 밑까지 거리</span><b id="vPd">—</b></div>
+      <div class="pr"><span data-i18n="pE">태양 고도(평면 기하)</span><b id="vPe">—</b></div>
+      <div class="pr"><span data-i18n="pS">선택한 빛 범위 기준</span><b id="vPs" class="day">—</b></div>
     </div>
 
     <div class="meter">
@@ -159,67 +164,69 @@ button.ghost.now:hover{background:rgba(255,162,74,.14);color:var(--hot);border-c
         <div class="meter-tick" style="left:50%"></div>
         <div class="meter-dot" id="mDot"></div>
       </div>
-      <div class="meter-ends"><span>북회귀선<br><b>1,938</b> km/h</span><span class="mid">적도<br><b>2,620</b></span><span class="r">남회귀선<br><b>3,302</b> km/h</span></div>
+      <div class="meter-ends"><span data-i18n-html="mB">북회귀선<br><b>1,938</b> km/h</span><span class="mid" data-i18n-html="mE">적도<br><b>2,620</b></span><span class="r" data-i18n-html="mC">남회귀선<br><b>3,302</b> km/h</span></div>
     </div>
 
     <table class="cmp" id="cmp">
-      <thead><tr><th>위치</th><th>반경</th><th>필요 속도</th></tr></thead>
+      <thead><tr><th data-i18n="thLoc">위치</th><th data-i18n="thR">반경</th><th data-i18n="thV">필요 속도</th></tr></thead>
       <tbody>
-        <tr data-k="B"><td><i class="sw r"></i>북회귀선</td><td>7,401 km</td><td><b>1,938</b> km/h</td></tr>
-        <tr data-k="E"><td><i class="sw o"></i>적도</td><td>10,008 km</td><td><b>2,620</b> km/h</td></tr>
-        <tr data-k="C"><td><i class="sw b"></i>남회귀선</td><td>12,614 km</td><td><b>3,302</b> km/h</td></tr>
+        <tr data-k="B"><td><i class="sw r"></i><span data-i18n="tB">북회귀선</span></td><td>7,401 km</td><td><b>1,938</b> km/h</td></tr>
+        <tr data-k="E"><td><i class="sw o"></i><span data-i18n="tE">적도</span></td><td>10,008 km</td><td><b>2,620</b> km/h</td></tr>
+        <tr data-k="C"><td><i class="sw b"></i><span data-i18n="tC">남회귀선</span></td><td>12,614 km</td><td><b>3,302</b> km/h</td></tr>
       </tbody>
     </table>
-    <div class="note">같은 24시간인데<br>남회귀선에서는 <b>1.70배</b> 빨라야 함</div>
+    <div class="note" data-i18n-html="note">같은 24시간인데<br>남회귀선에서는 <b>1.70배</b> 빨라야 함</div>
   </div>
 </aside>
 
-<section id="bar" aria-label="조작">
+<section id="bar">
   <div class="row">
-    <button id="btnPlay" class="primary" aria-label="재생 또는 일시정지">⏸ 일시정지</button>
+    <button id="btnPlay" class="primary" data-i18n-aria="playAria" aria-label="재생 또는 일시정지">⏸ 일시정지</button>
     <div class="sliderWrap">
-      <input id="sDay" type="range" min="0" max="365" step="1" value="0" aria-label="날짜 슬라이더">
+      <input id="sDay" type="range" min="0" max="365" step="1" value="0" data-i18n-aria="dayAria" aria-label="날짜 슬라이더">
       <div class="marks">
-        <span style="left:0%">6/21 하지·B</span>
-        <span style="left:25%">9/21경 추분</span>
-        <span style="left:50%">12/21 동지·C</span>
-        <span style="left:75%">3/21경 춘분</span>
-        <span style="left:100%">6/21 하지·B</span>
+        <span style="left:0%" data-i18n="m0">6/21 하지·B</span>
+        <span style="left:25%" data-i18n="m1">9/21경 추분</span>
+        <span style="left:50%" data-i18n="m2">12/21 동지·C</span>
+        <span style="left:75%" data-i18n="m3">3/21경 춘분</span>
+        <span style="left:100%" data-i18n="m0">6/21 하지·B</span>
       </div>
     </div>
-    <div class="dayNo"><b id="vDayNo">0</b><small> / 365일</small></div>
+    <div class="dayNo"><b id="vDayNo">0</b><small data-i18n="days"> / 365일</small></div>
   </div>
   <div class="row wrap">
-    <div class="group"><label>재생 속도</label>
+    <div class="group"><label data-i18n="lblCity">도시</label><select id="citySel" data-i18n-aria="citySel" aria-label="도시 선택"></select></div>
+    <div class="group"><label data-i18n="lblSpeed">재생 속도</label>
       <div class="seg" id="speedSeg">
-        <button data-s="0.0000115741" title="현실의 1초 = 시뮬레이션의 1초">실시간</button>
-        <button data-s="0.000694444" title="1초에 1분">1분/초</button>
-        <button data-s="0.0416667" title="1초에 1시간(하루 24초)">1시간/초</button>
-        <button data-s="0.2">0.2일/초</button>
-        <button data-s="1" class="on">1일/초</button>
-        <button data-s="5">5일/초</button>
-        <button data-s="20">20일/초</button>
-        <button data-s="60">60일/초</button>
+        <button data-s="0.0000115741" data-i18n="s0" data-i18n-title="s0t" title="현실의 1초 = 시뮬레이션의 1초">실시간</button>
+        <button data-s="0.000694444" data-i18n="s1" data-i18n-title="s1t" title="1초에 1분">1분/초</button>
+        <button data-s="0.0416667" data-i18n="s2" data-i18n-title="s2t" title="1초에 1시간(하루 24초)">1시간/초</button>
+        <button data-s="0.2" data-i18n="s3">0.2일/초</button>
+        <button data-s="1" class="on" data-i18n="s4">1일/초</button>
+        <button data-s="5" data-i18n="s5">5일/초</button>
+        <button data-s="20" data-i18n="s6">20일/초</button>
+        <button data-s="60" data-i18n="s7">60일/초</button>
       </div>
-      <button id="btnNow" class="ghost now" title="오늘 날짜와 지금 한국 시각(KST)으로 맞추고 실시간으로 재생">지금 시각으로</button>
+      <button id="btnNow" class="ghost now" data-i18n="now" title="오늘 날짜와 지금 한국 시각으로 맞추고 실시간으로 재생">지금 시각으로</button>
     </div>
-    <div class="group"><label>빛 범위</label>
+    <div class="group"><label data-i18n="lblRange">빛 범위</label>
       <div class="seg" id="rangeSeg">
-        <button data-r="dist" title="태양 바로 밑에서 90°(10,008 km)">거리 기준 10,008 km</button>
-        <button data-r="area" class="on" title="원판 면적의 절반(14,150 km)">면적 기준 14,150 km</button>
+        <button data-r="dist" data-i18n="rDist" data-i18n-title="rDistT" title="태양 바로 밑에서 90°(10,008 km)">거리 10,008</button>
+        <button data-r="real" class="on" data-i18n="rReal" data-i18n-title="rRealT" title="실제 낮·밤과 가장 잘 맞는 범위(11,300 km)">실제 근사 11,300</button>
+        <button data-r="area" data-i18n="rArea" data-i18n-title="rAreaT" title="원판 면적의 절반(14,150 km)">면적 14,150</button>
       </div>
     </div>
-    <div class="group"><label>시점</label>
+    <div class="group"><label data-i18n="lblView">시점</label>
       <div class="seg" id="viewSeg">
-        <button data-v="top">위에서 보기</button>
-        <button data-v="tilt" class="on">비스듬히 보기</button>
-        <button data-v="auto" id="btnAuto">자동 회전</button>
+        <button data-v="top" data-i18n="vTop">위에서 보기</button>
+        <button data-v="tilt" class="on" data-i18n="vTilt">비스듬히 보기</button>
+        <button data-v="auto" id="btnAuto" data-i18n="vAuto">자동 회전</button>
       </div>
     </div>
   </div>
 </section>
 
-<div id="hint">드래그: 회전 · 휠/핀치: 확대 · 우클릭 드래그: 이동</div>
+<div id="hint" data-i18n="hint">드래그: 회전 · 휠/핀치: 확대 · 우클릭 드래그: 이동</div>
 
 <script>
 /**
@@ -1292,7 +1299,8 @@ FE.CFG = {
   R_B: 7401, R_EQ: 10008, R_C: 12614, R_EDGE: 20016,
   DECL_MAX: 23.44, YEAR: 365.24,
   SUN_H_KM: 5000,                // 지면 위 태양 높이
-  RANGE: { dist: 10008, area: 20016 / Math.SQRT2 },   // 거리 기준(태양 밑에서 90°) / 면적 기준(원판의 50%)
+  RANGE: { dist: 10008, real: 11300, area: 20016 / Math.SQRT2 },   // 거리 기준(태양 밑에서 90°) / 실제 근사(204개 도시의 실제 낮·밤과 가장 잘 맞는 값, 약 92%) / 면적 기준(원판의 50%)
+  SPOT_I: 48,                    // 태양빛 세기(너무 크면 가운데가 하얗게 날아가 지도가 안 보임)
   MAP_ALBEDO: 0xb4b8c2, MAP_GLOW: 0,   // 지도 밝기: 태양빛을 받는 곳만 보임(MAP_GLOW>0이면 항상 보이는 바탕 추가)
   PERSON_LAT: 37.5,
   PERSON_PHI: -Math.PI / 2,      // 사람이 서 있는 경도(화면 아래쪽, +z)
@@ -1314,17 +1322,153 @@ FE.sunState = T => {
   return { decl, rKm, phi, speed };
 };
 
-/* 오늘 날짜 + 지금 한국 시각(KST) → T (6/21 0시 기준 날수). 패널의 날짜 표시(2026-06-21 기준)와 같은 기준 */
+/* 오늘 날짜 + 지금 선택한 도시의 현지 시각 → T (6/21 0시 기준 날수). 패널의 날짜 표시(2026-06-21 기준)와 같은 기준 */
+FE._fmt = {};
 FE.nowT = (date = new Date()) => {
-  const p = {};
-  new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
-    hour: 'numeric', minute: 'numeric', second: 'numeric' }).formatToParts(date).forEach(x => { p[x.type] = +x.value; });
+  const c = FE.city, p = {};
+  let f = FE._fmt[c.tz];
+  if (f === undefined) {
+    try { f = FE._fmt[c.tz] = new Intl.DateTimeFormat('en-US', { timeZone: c.tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric' }); } catch (e) { f = FE._fmt[c.tz] = null; }
+  }
+  if (f) f.formatToParts(date).forEach(x => { p[x.type] = +x.value; });
+  else {                                                      // 시간대 정보를 못 쓰면 경도(15°=1시간)로 근사
+    const d = new Date(date.getTime() + c.lon / 15 * 3600000);
+    p.year = d.getUTCFullYear(); p.month = d.getUTCMonth() + 1; p.day = d.getUTCDate(); p.hour = d.getUTCHours(); p.minute = d.getUTCMinutes(); p.second = d.getUTCSeconds();
+  }
   const days = Math.round((Date.UTC(p.year, p.month - 1, p.day) - Date.UTC(2026, 5, 21)) / 86400000);
   const day = ((days % 365) + 365) % 365;
-  return day + (p.hour * 3600 + p.minute * 60 + p.second) / 86400;
+  return day + ((p.hour % 24) * 3600 + p.minute * 60 + p.second) / 86400;
 };
 
 FE.fmt = n => Math.round(n).toLocaleString('en-US');
+
+/* ===== 01 언어(한국어/English) · 도시 목록 · 저장 ===== */
+FE.STR = {
+  ko: {
+    docTitle: '평면 모델에서 태양이 움직이는 경로 · 3D', title: '평면 모델 · 태양의 경로', subtitle: '북극 중심 정거방위도법 · 위도 1° = 111.2 km',
+    panelAria: '실시간 정보 패널', live: '실시간 정보', collapse: '접기', expand: '펼치기', collapseAria: '패널 접기', expandAria: '패널 펼치기',
+    sub: '시각은 {city}({lat}) 현지 기준 태양시', rLat: '태양 바로 밑 위도', rR: '북극에서의 거리', rV: '태양이 내야 하는 속도',
+    ph: '{city} · {lat} 사람 기준', pD: '태양 바로 밑까지 거리', pE: '태양 고도(평면 기하)', pS: '선택한 빛 범위 기준',
+    inRange: '빛 범위 안 · 낮', outRange: '빛 범위 밖 · 밤',
+    mB: '북회귀선<br><b>1,938</b> km/h', mE: '적도<br><b>2,620</b>', mC: '남회귀선<br><b>3,302</b> km/h',
+    thLoc: '위치', thR: '반경', thV: '필요 속도', tB: '북회귀선', tE: '적도', tC: '남회귀선',
+    note: '같은 24시간인데<br>남회귀선에서는 <b>1.70배</b> 빨라야 함',
+    pause: '⏸ 일시정지', play: '▶ 재생', playAria: '재생 또는 일시정지', dayAria: '날짜 슬라이더',
+    m0: '6/21 하지·B', m1: '9/21경 추분', m2: '12/21 동지·C', m3: '3/21경 춘분', days: ' / 365일',
+    lblCity: '도시', citySel: '도시 선택', lblSpeed: '재생 속도',
+    s0: '실시간', s0t: '현실의 1초 = 시뮬레이션의 1초', s1: '1분/초', s1t: '1초에 1분', s2: '1시간/초', s2t: '1초에 1시간(하루 24초)',
+    s3: '0.2일/초', s4: '1일/초', s5: '5일/초', s6: '20일/초', s7: '60일/초',
+    now: '지금 시각으로', nowT: '오늘 날짜와 {city} 현지 시각으로 맞추고 실시간으로 재생',
+    lblRange: '빛 범위(km)', rDist: '거리 10,008', rDistT: '태양 바로 밑에서 90°(10,008 km)', rReal: '실제 근사 11,300', rRealT: '실제 지구의 낮·밤과 가장 잘 맞는 범위(11,300 km). 204개 도시 기준 약 92% 일치', rArea: '면적 14,150', rAreaT: '원판 면적의 절반(14,150 km)',
+    lblView: '시점', vTop: '위에서 보기', vTilt: '비스듬히 보기', vAuto: '자동 회전',
+    hint: '드래그: 회전 · 휠/핀치: 확대 · 우클릭 드래그: 이동', moreOpen: '설정 ▾', moreClosed: '설정 ▴', moreAria: '설정 열기/닫기',
+    dateF: '{m}월 {d}일', latN: '북위 {v}°', latS: '남위 {v}°', eq: '적도 0.00°', lang: 'English', langBtn: 'EN',
+    north: '북극', lbB: '북회귀선 B', lbE: '적도', lbC: '남회귀선 C', lbEdge: '가장자리 = 남극', east: '동',
+    r_kr: '한국', r_as: '아시아', r_me: '중동·캅카스', r_eu: '유럽', r_ru: '러시아', r_na: '북·중미', r_la: '남미', r_af: '아프리카', r_oc: '오세아니아', r_pl: '극지방'
+  },
+  en: {
+    docTitle: 'Path of the Sun on a Flat Model · 3D', title: 'Flat Model · Path of the Sun', subtitle: 'North-pole azimuthal equidistant · 1° latitude = 111.2 km',
+    panelAria: 'Live info panel', live: 'Live info', collapse: 'Hide', expand: 'Show', collapseAria: 'Hide panel', expandAria: 'Show panel',
+    sub: 'Time is solar time at {city} ({lat})', rLat: 'Latitude under the sun', rR: 'Distance from North Pole', rV: 'Speed the sun needs',
+    ph: 'Person at {city} · {lat}', pD: 'Distance to point below sun', pE: 'Sun elevation (flat geometry)', pS: 'Selected light range',
+    inRange: 'Inside · Day', outRange: 'Outside · Night',
+    mB: 'Cancer B<br><b>1,938</b> km/h', mE: 'Equator<br><b>2,620</b>', mC: 'Capricorn C<br><b>3,302</b> km/h',
+    thLoc: 'Location', thR: 'Radius', thV: 'Speed', tB: 'Cancer', tE: 'Equator', tC: 'Capricorn',
+    note: 'Same 24 hours, but on the<br>Tropic of Capricorn it must be <b>1.70×</b> faster',
+    pause: '⏸ Pause', play: '▶ Play', playAria: 'Play or pause', dayAria: 'Day slider',
+    m0: 'Jun 21 Solstice·B', m1: '~Sep 21 Equinox', m2: 'Dec 21 Solstice·C', m3: '~Mar 21 Equinox', days: ' / 365 days',
+    lblCity: 'City', citySel: 'Choose a city', lblSpeed: 'Speed',
+    s0: 'Real time', s0t: '1 real second = 1 simulated second', s1: '1 min/s', s1t: '1 minute per second', s2: '1 h/s', s2t: '1 hour per second (24 s per day)',
+    s3: '0.2 d/s', s4: '1 d/s', s5: '5 d/s', s6: '20 d/s', s7: '60 d/s',
+    now: 'Set to now', nowT: "Jump to today's date and the current local time in {city}, and play in real time",
+    lblRange: 'Light range (km)', rDist: 'Distance 10,008', rDistT: '90° from the point below the sun (10,008 km)', rReal: 'Best fit 11,300', rRealT: "The range that best matches real day and night (11,300 km): about 92% agreement across 204 cities", rArea: 'Area 14,150', rAreaT: 'Half of the disc area (14,150 km)',
+    lblView: 'View', vTop: 'Top view', vTilt: 'Tilted view', vAuto: 'Auto-rotate',
+    hint: 'Drag: rotate · Wheel/pinch: zoom · Right-drag: pan', moreOpen: 'Settings ▾', moreClosed: 'Settings ▴', moreAria: 'Open or close settings',
+    dateF: '{m} {d}', latN: '{v}° N', latS: '{v}° S', eq: 'Equator 0.00°', lang: '한국어', langBtn: '한',
+    north: 'North Pole', lbB: 'Cancer B', lbE: 'Equator', lbC: 'Capricorn C', lbEdge: 'Edge = Antarctica', east: 'E',
+    r_kr: 'South Korea', r_as: 'Asia', r_me: 'Middle East & Caucasus', r_eu: 'Europe', r_ru: 'Russia', r_na: 'North & Central America', r_la: 'South America', r_af: 'Africa', r_oc: 'Oceania', r_pl: 'Polar regions'
+  }
+};
+FE.MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+FE.t = (k, v) => {
+  let s = FE.STR[FE.lang][k]; if (s === undefined) s = FE.STR.ko[k]; if (s === undefined) return k;
+  if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]);
+  return s;
+};
+/* [id, 한글, English, 위도, 경도, IANA 시간대, 권역] — 위도 +북/-남, 경도 +동/-서 */
+FE.CITY_ROWS = [
+['seoul','서울','Seoul',37.5,127.0,'Asia/Seoul','kr'],['busan','부산','Busan',35.18,129.08,'Asia/Seoul','kr'],['incheon','인천','Incheon',37.46,126.71,'Asia/Seoul','kr'],['daegu','대구','Daegu',35.87,128.60,'Asia/Seoul','kr'],['daejeon','대전','Daejeon',36.35,127.38,'Asia/Seoul','kr'],['gwangju','광주','Gwangju',35.16,126.85,'Asia/Seoul','kr'],['ulsan','울산','Ulsan',35.54,129.31,'Asia/Seoul','kr'],['jeju','제주','Jeju',33.50,126.53,'Asia/Seoul','kr'],['gangneung','강릉','Gangneung',37.75,128.88,'Asia/Seoul','kr'],['chuncheon','춘천','Chuncheon',37.88,127.73,'Asia/Seoul','kr'],['jeonju','전주','Jeonju',35.82,127.15,'Asia/Seoul','kr'],['cheongju','청주','Cheongju',36.64,127.49,'Asia/Seoul','kr'],['pohang','포항','Pohang',36.02,129.37,'Asia/Seoul','kr'],
+['pyongyang','평양','Pyongyang',39.04,125.76,'Asia/Pyongyang','as'],['tokyo','도쿄','Tokyo',35.68,139.69,'Asia/Tokyo','as'],['osaka','오사카','Osaka',34.69,135.50,'Asia/Tokyo','as'],['nagoya','나고야','Nagoya',35.18,136.91,'Asia/Tokyo','as'],['sapporo','삿포로','Sapporo',43.06,141.35,'Asia/Tokyo','as'],['fukuoka','후쿠오카','Fukuoka',33.59,130.40,'Asia/Tokyo','as'],['naha','나하','Naha',26.21,127.68,'Asia/Tokyo','as'],
+['beijing','베이징','Beijing',39.90,116.41,'Asia/Shanghai','as'],['shanghai','상하이','Shanghai',31.23,121.47,'Asia/Shanghai','as'],['guangzhou','광저우','Guangzhou',23.13,113.26,'Asia/Shanghai','as'],['shenzhen','선전','Shenzhen',22.54,114.06,'Asia/Shanghai','as'],['chengdu','청두','Chengdu',30.57,104.07,'Asia/Shanghai','as'],['chongqing','충칭','Chongqing',29.56,106.55,'Asia/Shanghai','as'],['xian','시안','Xi’an',34.34,108.94,'Asia/Shanghai','as'],['harbin','하얼빈','Harbin',45.80,126.53,'Asia/Shanghai','as'],['wuhan','우한','Wuhan',30.59,114.31,'Asia/Shanghai','as'],['urumqi','우루무치','Urumqi',43.83,87.62,'Asia/Urumqi','as'],['lhasa','라싸','Lhasa',29.65,91.14,'Asia/Shanghai','as'],['hongkong','홍콩','Hong Kong',22.32,114.17,'Asia/Hong_Kong','as'],['taipei','타이베이','Taipei',25.03,121.57,'Asia/Taipei','as'],['ulaanbaatar','울란바토르','Ulaanbaatar',47.89,106.91,'Asia/Ulaanbaatar','as'],
+['hanoi','하노이','Hanoi',21.03,105.85,'Asia/Ho_Chi_Minh','as'],['hochiminh','호찌민','Ho Chi Minh City',10.82,106.63,'Asia/Ho_Chi_Minh','as'],['danang','다낭','Da Nang',16.05,108.20,'Asia/Ho_Chi_Minh','as'],['bangkok','방콕','Bangkok',13.76,100.50,'Asia/Bangkok','as'],['chiangmai','치앙마이','Chiang Mai',18.79,98.98,'Asia/Bangkok','as'],['phnompenh','프놈펜','Phnom Penh',11.56,104.93,'Asia/Phnom_Penh','as'],['vientiane','비엔티안','Vientiane',17.97,102.63,'Asia/Vientiane','as'],['yangon','양곤','Yangon',16.87,96.20,'Asia/Yangon','as'],['kualalumpur','쿠알라룸푸르','Kuala Lumpur',3.14,101.69,'Asia/Kuala_Lumpur','as'],['singapore','싱가포르','Singapore',1.35,103.82,'Asia/Singapore','as'],['jakarta','자카르타','Jakarta',-6.21,106.85,'Asia/Jakarta','as'],['denpasar','덴파사르(발리)','Denpasar (Bali)',-8.65,115.22,'Asia/Makassar','as'],['manila','마닐라','Manila',14.60,120.98,'Asia/Manila','as'],['cebu','세부','Cebu',10.32,123.89,'Asia/Manila','as'],
+['delhi','델리','Delhi',28.61,77.21,'Asia/Kolkata','as'],['mumbai','뭄바이','Mumbai',19.08,72.88,'Asia/Kolkata','as'],['kolkata','콜카타','Kolkata',22.57,88.36,'Asia/Kolkata','as'],['bengaluru','벵갈루루','Bengaluru',12.97,77.59,'Asia/Kolkata','as'],['chennai','첸나이','Chennai',13.08,80.27,'Asia/Kolkata','as'],['dhaka','다카','Dhaka',23.81,90.41,'Asia/Dhaka','as'],['kathmandu','카트만두','Kathmandu',27.72,85.32,'Asia/Kathmandu','as'],['colombo','콜롬보','Colombo',6.93,79.86,'Asia/Colombo','as'],['male','말레','Malé',4.18,73.51,'Indian/Maldives','as'],['karachi','카라치','Karachi',24.86,67.01,'Asia/Karachi','as'],['lahore','라호르','Lahore',31.55,74.34,'Asia/Karachi','as'],['islamabad','이슬라마바드','Islamabad',33.68,73.05,'Asia/Karachi','as'],['kabul','카불','Kabul',34.53,69.17,'Asia/Kabul','as'],['tashkent','타슈켄트','Tashkent',41.30,69.24,'Asia/Tashkent','as'],['almaty','알마티','Almaty',43.24,76.89,'Asia/Almaty','as'],
+['dubai','두바이','Dubai',25.20,55.27,'Asia/Dubai','me'],['abudhabi','아부다비','Abu Dhabi',24.45,54.38,'Asia/Dubai','me'],['doha','도하','Doha',25.29,51.53,'Asia/Qatar','me'],['riyadh','리야드','Riyadh',24.71,46.68,'Asia/Riyadh','me'],['jeddah','제다','Jeddah',21.49,39.19,'Asia/Riyadh','me'],['kuwaitcity','쿠웨이트시티','Kuwait City',29.38,47.99,'Asia/Kuwait','me'],['muscat','무스카트','Muscat',23.59,58.41,'Asia/Muscat','me'],['baghdad','바그다드','Baghdad',33.31,44.37,'Asia/Baghdad','me'],['tehran','테헤란','Tehran',35.69,51.39,'Asia/Tehran','me'],['telaviv','텔아비브','Tel Aviv',32.09,34.78,'Asia/Jerusalem','me'],['jerusalem','예루살렘','Jerusalem',31.77,35.21,'Asia/Jerusalem','me'],['amman','암만','Amman',31.95,35.93,'Asia/Amman','me'],['beirut','베이루트','Beirut',33.89,35.50,'Asia/Beirut','me'],['istanbul','이스탄불','Istanbul',41.01,28.98,'Europe/Istanbul','me'],['ankara','앙카라','Ankara',39.93,32.86,'Europe/Istanbul','me'],['baku','바쿠','Baku',40.41,49.87,'Asia/Baku','me'],['tbilisi','트빌리시','Tbilisi',41.72,44.79,'Asia/Tbilisi','me'],['yerevan','예레반','Yerevan',40.18,44.51,'Asia/Yerevan','me'],
+['london','런던','London',51.51,-0.13,'Europe/London','eu'],['edinburgh','에든버러','Edinburgh',55.95,-3.19,'Europe/London','eu'],['dublin','더블린','Dublin',53.35,-6.26,'Europe/Dublin','eu'],['paris','파리','Paris',48.86,2.35,'Europe/Paris','eu'],['marseille','마르세유','Marseille',43.30,5.37,'Europe/Paris','eu'],['brussels','브뤼셀','Brussels',50.85,4.35,'Europe/Brussels','eu'],['amsterdam','암스테르담','Amsterdam',52.37,4.90,'Europe/Amsterdam','eu'],['berlin','베를린','Berlin',52.52,13.40,'Europe/Berlin','eu'],['munich','뮌헨','Munich',48.14,11.58,'Europe/Berlin','eu'],['frankfurt','프랑크푸르트','Frankfurt',50.11,8.68,'Europe/Berlin','eu'],['hamburg','함부르크','Hamburg',53.55,9.99,'Europe/Berlin','eu'],['zurich','취리히','Zurich',47.38,8.54,'Europe/Zurich','eu'],['geneva','제네바','Geneva',46.20,6.14,'Europe/Zurich','eu'],['vienna','빈','Vienna',48.21,16.37,'Europe/Vienna','eu'],['prague','프라하','Prague',50.08,14.44,'Europe/Prague','eu'],['warsaw','바르샤바','Warsaw',52.23,21.01,'Europe/Warsaw','eu'],['krakow','크라쿠프','Kraków',50.06,19.94,'Europe/Warsaw','eu'],['budapest','부다페스트','Budapest',47.50,19.04,'Europe/Budapest','eu'],['bucharest','부쿠레슈티','Bucharest',44.43,26.10,'Europe/Bucharest','eu'],['sofia','소피아','Sofia',42.70,23.32,'Europe/Sofia','eu'],['belgrade','베오그라드','Belgrade',44.79,20.45,'Europe/Belgrade','eu'],['zagreb','자그레브','Zagreb',45.81,15.98,'Europe/Zagreb','eu'],['athens','아테네','Athens',37.98,23.73,'Europe/Athens','eu'],['rome','로마','Rome',41.90,12.50,'Europe/Rome','eu'],['milan','밀라노','Milan',45.46,9.19,'Europe/Rome','eu'],['venice','베네치아','Venice',45.44,12.32,'Europe/Rome','eu'],['madrid','마드리드','Madrid',40.42,-3.70,'Europe/Madrid','eu'],['barcelona','바르셀로나','Barcelona',41.39,2.17,'Europe/Madrid','eu'],['lisbon','리스본','Lisbon',38.72,-9.14,'Europe/Lisbon','eu'],['reykjavik','레이캬비크','Reykjavík',64.15,-21.94,'Atlantic/Reykjavik','eu'],['oslo','오슬로','Oslo',59.91,10.75,'Europe/Oslo','eu'],['tromso','트롬쇠','Tromsø',69.65,18.96,'Europe/Oslo','eu'],['stockholm','스톡홀름','Stockholm',59.33,18.07,'Europe/Stockholm','eu'],['helsinki','헬싱키','Helsinki',60.17,24.94,'Europe/Helsinki','eu'],['copenhagen','코펜하겐','Copenhagen',55.68,12.57,'Europe/Copenhagen','eu'],['kyiv','키이우','Kyiv',50.45,30.52,'Europe/Kiev','eu'],['minsk','민스크','Minsk',53.90,27.57,'Europe/Minsk','eu'],
+['moscow','모스크바','Moscow',55.76,37.62,'Europe/Moscow','ru'],['stpetersburg','상트페테르부르크','St. Petersburg',59.93,30.34,'Europe/Moscow','ru'],['novosibirsk','노보시비르스크','Novosibirsk',55.03,82.92,'Asia/Novosibirsk','ru'],['irkutsk','이르쿠츠크','Irkutsk',52.29,104.30,'Asia/Irkutsk','ru'],['yakutsk','야쿠츠크','Yakutsk',62.03,129.73,'Asia/Yakutsk','ru'],['vladivostok','블라디보스토크','Vladivostok',43.12,131.89,'Asia/Vladivostok','ru'],
+['newyork','뉴욕','New York',40.71,-74.01,'America/New_York','na'],['washington','워싱턴 D.C.','Washington, D.C.',38.91,-77.04,'America/New_York','na'],['boston','보스턴','Boston',42.36,-71.06,'America/New_York','na'],['atlanta','애틀랜타','Atlanta',33.75,-84.39,'America/New_York','na'],['miami','마이애미','Miami',25.76,-80.19,'America/New_York','na'],['chicago','시카고','Chicago',41.88,-87.63,'America/Chicago','na'],['houston','휴스턴','Houston',29.76,-95.37,'America/Chicago','na'],['dallas','댈러스','Dallas',32.78,-96.80,'America/Chicago','na'],['denver','덴버','Denver',39.74,-104.99,'America/Denver','na'],['phoenix','피닉스','Phoenix',33.45,-112.07,'America/Phoenix','na'],['losangeles','로스앤젤레스','Los Angeles',34.05,-118.24,'America/Los_Angeles','na'],['sanfrancisco','샌프란시스코','San Francisco',37.77,-122.42,'America/Los_Angeles','na'],['lasvegas','라스베이거스','Las Vegas',36.17,-115.14,'America/Los_Angeles','na'],['seattle','시애틀','Seattle',47.61,-122.33,'America/Los_Angeles','na'],['anchorage','앵커리지','Anchorage',61.22,-149.90,'America/Anchorage','na'],['honolulu','호놀룰루','Honolulu',21.31,-157.86,'Pacific/Honolulu','na'],['toronto','토론토','Toronto',43.65,-79.38,'America/Toronto','na'],['montreal','몬트리올','Montréal',45.50,-73.57,'America/Toronto','na'],['vancouver','밴쿠버','Vancouver',49.28,-123.12,'America/Vancouver','na'],['calgary','캘거리','Calgary',51.05,-114.07,'America/Edmonton','na'],['nuuk','누크','Nuuk',64.18,-51.72,'America/Nuuk','na'],['mexicocity','멕시코시티','Mexico City',19.43,-99.13,'America/Mexico_City','na'],['cancun','칸쿤','Cancún',21.16,-86.85,'America/Cancun','na'],['havana','아바나','Havana',23.11,-82.37,'America/Havana','na'],['guatemalacity','과테말라시티','Guatemala City',14.63,-90.51,'America/Guatemala','na'],['sanjosecr','산호세(코스타리카)','San José (Costa Rica)',9.93,-84.08,'America/Costa_Rica','na'],['panamacity','파나마시티','Panama City',8.98,-79.52,'America/Panama','na'],['kingston','킹스턴','Kingston',17.97,-76.79,'America/Jamaica','na'],['santodomingo','산토도밍고','Santo Domingo',18.49,-69.93,'America/Santo_Domingo','na'],
+['bogota','보고타','Bogotá',4.71,-74.07,'America/Bogota','la'],['caracas','카라카스','Caracas',10.48,-66.90,'America/Caracas','la'],['quito','키토','Quito',-0.18,-78.47,'America/Guayaquil','la'],['lima','리마','Lima',-12.05,-77.04,'America/Lima','la'],['cusco','쿠스코','Cusco',-13.53,-71.97,'America/Lima','la'],['lapaz','라파스','La Paz',-16.50,-68.15,'America/La_Paz','la'],['manaus','마나우스','Manaus',-3.12,-60.02,'America/Manaus','la'],['brasilia','브라질리아','Brasília',-15.79,-47.88,'America/Sao_Paulo','la'],['riodejaneiro','리우데자네이루','Rio de Janeiro',-22.91,-43.17,'America/Sao_Paulo','la'],['saopaulo','상파울루','São Paulo',-23.55,-46.63,'America/Sao_Paulo','la'],['asuncion','아순시온','Asunción',-25.26,-57.58,'America/Asuncion','la'],['santiago','산티아고','Santiago',-33.45,-70.67,'America/Santiago','la'],['buenosaires','부에노스아이레스','Buenos Aires',-34.60,-58.38,'America/Argentina/Buenos_Aires','la'],['montevideo','몬테비데오','Montevideo',-34.90,-56.16,'America/Montevideo','la'],['ushuaia','우수아이아','Ushuaia',-54.80,-68.30,'America/Argentina/Ushuaia','la'],
+['cairo','카이로','Cairo',30.04,31.24,'Africa/Cairo','af'],['casablanca','카사블랑카','Casablanca',33.57,-7.59,'Africa/Casablanca','af'],['algiers','알제','Algiers',36.75,3.06,'Africa/Algiers','af'],['tunis','튀니스','Tunis',36.81,10.18,'Africa/Tunis','af'],['dakar','다카르','Dakar',14.69,-17.45,'Africa/Dakar','af'],['accra','아크라','Accra',5.60,-0.19,'Africa/Accra','af'],['lagos','라고스','Lagos',6.52,3.38,'Africa/Lagos','af'],['addisababa','아디스아바바','Addis Ababa',9.03,38.74,'Africa/Addis_Ababa','af'],['nairobi','나이로비','Nairobi',-1.29,36.82,'Africa/Nairobi','af'],['daressalaam','다르에스살람','Dar es Salaam',-6.79,39.21,'Africa/Dar_es_Salaam','af'],['kinshasa','킨샤사','Kinshasa',-4.44,15.27,'Africa/Kinshasa','af'],['luanda','루안다','Luanda',-8.84,13.23,'Africa/Luanda','af'],['harare','하라레','Harare',-17.83,31.05,'Africa/Harare','af'],['antananarivo','안타나나리보','Antananarivo',-18.88,47.51,'Indian/Antananarivo','af'],['windhoek','빈트후크','Windhoek',-22.56,17.08,'Africa/Windhoek','af'],['johannesburg','요하네스버그','Johannesburg',-26.20,28.05,'Africa/Johannesburg','af'],['capetown','케이프타운','Cape Town',-33.92,18.42,'Africa/Johannesburg','af'],
+['sydney','시드니','Sydney',-33.87,151.21,'Australia/Sydney','oc'],['melbourne','멜버른','Melbourne',-37.81,144.96,'Australia/Melbourne','oc'],['brisbane','브리즈번','Brisbane',-27.47,153.03,'Australia/Brisbane','oc'],['adelaide','애들레이드','Adelaide',-34.93,138.60,'Australia/Adelaide','oc'],['perth','퍼스','Perth',-31.95,115.86,'Australia/Perth','oc'],['darwin','다윈','Darwin',-12.46,130.84,'Australia/Darwin','oc'],['hobart','호바트','Hobart',-42.88,147.33,'Australia/Hobart','oc'],['auckland','오클랜드','Auckland',-36.85,174.76,'Pacific/Auckland','oc'],['wellington','웰링턴','Wellington',-41.29,174.78,'Pacific/Auckland','oc'],['christchurch','크라이스트처치','Christchurch',-43.53,172.64,'Pacific/Auckland','oc'],['portmoresby','포트모르즈비','Port Moresby',-9.44,147.18,'Pacific/Port_Moresby','oc'],['guam','괌','Guam',13.44,144.79,'Pacific/Guam','oc'],['suva','수바','Suva',-18.14,178.44,'Pacific/Fiji','oc'],['papeete','파페에테','Papeete',-17.54,-149.57,'Pacific/Tahiti','oc'],
+['dasan','다산과학기지(스발바르)','Dasan Station (Svalbard)',78.93,11.93,'Arctic/Longyearbyen','pl'],['longyearbyen','롱이어비엔','Longyearbyen',78.22,15.65,'Arctic/Longyearbyen','pl'],['sejong','세종과학기지(남극)','King Sejong Station (Antarctica)',-62.22,-58.78,'America/Santiago','pl'],['jangbogo','장보고과학기지(남극)','Jang Bogo Station (Antarctica)',-74.62,164.22,'Pacific/Auckland','pl'],['mcmurdo','맥머도 기지(남극)','McMurdo Station (Antarctica)',-77.85,166.67,'Pacific/Auckland','pl']
+];
+
+FE.CITIES = FE.CITY_ROWS.map(r => ({ id: r[0], ko: r[1], en: r[2], lat: r[3], lon: r[4], tz: r[5], reg: r[6] }));
+FE.REGIONS = ['kr', 'as', 'me', 'eu', 'ru', 'na', 'la', 'af', 'oc', 'pl'];
+FE.cityName = (c = FE.city) => c[FE.lang];
+FE.latStr = (v, d = 1) => FE.t(v >= 0 ? 'latN' : 'latS', { v: Math.abs(v).toFixed(d) });
+FE.fmtDate = (m, d) => FE.t('dateF', { m: FE.lang === 'en' ? FE.MONTHS_EN[m - 1] : m, d });
+
+/* 저장(기기 안에서만) — 저장소를 못 쓰는 환경(미리보기 등)에서도 오류 없이 동작 */
+FE.store = {
+  get(k) { try { return localStorage.getItem('fe.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('fe.' + k, v); } catch (e) {} }
+};
+FE.initLocale = () => {
+  const q = new URLSearchParams(location.search);
+  const dev = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ko').toLowerCase();
+  const l = q.get('lang') || FE.store.get('lang') || (dev.startsWith('ko') ? 'ko' : 'en');
+  FE.lang = l === 'ko' ? 'ko' : 'en';
+  let id = q.get('city') || FE.store.get('city');
+  let c = FE.CITIES.find(x => x.id === id);
+  if (!c) {                                    // 처음 실행: 기기 시간대와 같은 도시가 있으면 그 도시, 없으면 서울
+    let tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+    c = FE.CITIES.find(x => x.tz === tz) || FE.CITIES[0];
+  }
+  FE.city = c; FE.CFG.PERSON_LAT = c.lat;
+};
+FE.applyI18n = () => {
+  document.documentElement.lang = FE.lang; document.title = FE.t('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = FE.t(e.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = FE.t(e.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = FE.t(e.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', FE.t(e.dataset.i18nAria)); });
+};
+FE.setLang = l => { FE.lang = l; FE.store.set('lang', l); FE.onChange ? FE.onChange() : FE.applyI18n(); };
+FE.pickCity = id => {
+  const c = FE.CITIES.find(x => x.id === id); if (!c) return;
+  FE.city = c; FE.CFG.PERSON_LAT = c.lat; FE.store.set('city', id); FE.onChange && FE.onChange();
+};
+FE.buildCitySelect = () => {
+  const sel = document.getElementById('citySel'); if (!sel) return;
+  sel.textContent = '';
+  FE.REGIONS.forEach(r => {
+    const g = document.createElement('optgroup'); g.label = FE.t('r_' + r);
+    FE.CITIES.filter(c => c.reg === r).forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = FE.cityName(c); g.appendChild(o); });
+    sel.appendChild(g);
+  });
+  sel.value = FE.city.id;
+};
+/* 캔버스 라벨에 들어갈 글자를 먼저 불러온 뒤 그리기(웹폰트가 늦게 와도 글자가 바뀌지 않게) */
+FE.labelText = () => ['north', 'lbB', 'lbE', 'lbC', 'lbEdge', 'east'].map(k => FE.t(k)).join('') + FE.cityName() + FE.latStr(0) + FE.latStr(-1) + '·°';
+FE.fontText = () => FE.labelText() + FE.STR.ko.north + FE.STR.ko.lbB + FE.STR.ko.lbC + FE.STR.ko.lbEdge + FE.STR.ko.latN + FE.STR.ko.latS;
+FE.withFont = fn => {
+  let done = false; const go = () => { if (!done) { done = true; fn(); } };
+  try { document.fonts.load(`700 40px ${FE.CFG.FONT}`, FE.labelText()).then(go, go); } catch (e) { go(); }
+  setTimeout(go, 1500);
+};
+FE.disposeSprite = s => { if (s.parent) s.parent.remove(s); if (s.material.map) s.material.map.dispose(); s.material.dispose(); };
+FE.initLocale();
 
 /* ===== 05 라벨(스프라이트) 공용 ===== */
 FE.makeLabel = (text, opt = {}) => {
@@ -1408,17 +1552,26 @@ FE.createGround = scene => {
   const pole = new THREE.Mesh(new THREE.CircleGeometry(0.16, 32).rotateX(-Math.PI / 2), mat(0xffffff));
   pole.position.y = 0.03; grp.add(pole);
 
-  // 한글 라벨: 원마다 다른 방위각에 부채꼴로 흩어 놓아 서로·원 선과 겹치지 않게 함
-  const add = (text, rKm, deg, color, out) => {
-    const phi = deg * Math.PI / 180, s = FE.makeLabel(text, { color, height: 1.2 });
+  // 라벨: 원마다 다른 방위각에 부채꼴로 흩어 놓아 서로·원 선과 겹치지 않게 함(언어를 바꾸면 다시 그림)
+  const labels = new THREE.Group(); grp.add(labels);
+  const add = (key, rKm, deg, color, out) => {
+    const phi = deg * Math.PI / 180, s = FE.makeLabel(FE.t(key), { color, height: 1.2 });
+    if (FE.lang === 'en') out += s.scale.x / 2 * Math.abs(Math.cos(phi));          // 영어는 글자가 길어서 원 바깥으로 더 밀어냄
     s.position.copy(FE.polar(rKm, phi, 0.25)).add(new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi)).multiplyScalar(out));
-    grp.add(s);
+    labels.add(s);
   };
-  const north = FE.makeLabel('북극', { color: '#ffffff', height: 1.2 }); north.position.set(0.0, 0.25, 1.1); grp.add(north);
-  add('북회귀선 B', C.R_B, 115, '#ff7b7b', 0.9);
-  add('적도', C.R_EQ, 145, '#ffb866', 0.9);
-  add('남회귀선 C', C.R_C, 175, '#7db3ff', 0.9);
-  add('가장자리 = 남극', C.R_EDGE, 150, '#e0e4f0', 1.6);
+  const buildLabels = () => {
+    while (labels.children.length) FE.disposeSprite(labels.children[0]);
+    const north = FE.makeLabel(FE.t('north'), { color: '#ffffff', height: 1.2 });
+    const nearPole = FE.u((90 - Math.abs(FE.CFG.PERSON_LAT)) * FE.CFG.KM_PER_DEG) < 3.5 && FE.CFG.PERSON_LAT > 0;
+    north.position.set(0.0, 0.25, nearPole ? -1.4 : 1.1); labels.add(north);      // 사람이 북극 가까이 서 있으면 반대쪽으로
+    add('lbB', C.R_B, 115, '#ff7b7b', 0.9);
+    add('lbE', C.R_EQ, 145, '#ffb866', 0.9);
+    add('lbC', C.R_C, 175, '#7db3ff', 0.9);
+    add('lbEdge', C.R_EDGE, FE.lang === 'en' ? 100 : 150, '#e0e4f0', 1.6);   // 영어는 글자가 길어 위쪽(뒤편)에 둠 → 좁은 화면에서도 안 잘림
+  };
+  grp.userData.relabel = () => FE.withFont(buildLabels);
+  grp.userData.setLon = lonDeg => { disk.rotation.y = (127 - lonDeg) * Math.PI / 180; };   // 지도는 서울(동경 127°)이 사람 자리에 오도록 잘라 둠 → 도시 경도만큼 돌림
 
   scene.add(grp);
   return grp;
@@ -1427,7 +1580,7 @@ FE.createGround = scene => {
 /* ===== 20 태양: 구 + 글로우 + 아래로 비추는 스포트라이트 + 반투명 빛 원뿔 ===== */
 FE.createSun = scene => {
   const C = FE.CFG, H = FE.u(C.SUN_H_KM);
-  let rangeKm = FE.CFG.RANGE.area, ANGLE = Math.atan(FE.u(rangeKm) / H);
+  let rangeKm = FE.CFG.RANGE.real, ANGLE = Math.atan(FE.u(rangeKm) / H);
   const root = new THREE.Group(); scene.add(root);
 
   // 구
@@ -1451,7 +1604,7 @@ FE.createSun = scene => {
   glow.scale.set(5.4, 5.4, 1); root.add(glow);
 
   // 스포트라이트: 거리 감쇠(역제곱) + 페넘브라 1.0
-  const spot = new THREE.SpotLight(0xff9a3a, 110, 0, ANGLE, 0.9, 1);
+  const spot = new THREE.SpotLight(0xff9a3a, FE.CFG.SPOT_I, 0, ANGLE, 0.9, 1);
   scene.add(spot, spot.target);
 
   // 빛 원뿔(반투명, 꼭짓점=태양, 밑면=지면)
@@ -1471,10 +1624,12 @@ FE.createSun = scene => {
   const cone = new THREE.Mesh(new THREE.ConeGeometry(H * Math.tan(ANGLE), H, 96, 1, true), coneMat);
   cone.renderOrder = 5; scene.add(cone);
 
-  // 바로 밑 지점 표시: 가는 수직선 + 작은 링
-  const drop = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(0, H, 0)]),
-    new THREE.LineDashedMaterial({ color: 0xffb86b, dashSize: 0.18, gapSize: 0.14, transparent: true, opacity: 0.55 }));
-  drop.computeLineDistances(); scene.add(drop);
+  // 바로 밑 지점 표시: 태양~지표면을 잇는 점선(짧은 막대를 이어 붙임 → 가는 선보다 훨씬 잘 보임) + 작은 링
+  const drop = new THREE.Group();
+  const dMat = new THREE.MeshBasicMaterial({ color: 0xfff1d6, transparent: true, opacity: 1, depthTest: false, depthWrite: false, toneMapped: false });
+  const dGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.24, 10);
+  for (let y = 0.1; y < H - 0.4; y += 0.46) { const m = new THREE.Mesh(dGeo, dMat); m.position.y = y + 0.1; m.renderOrder = 8; drop.add(m); }
+  scene.add(drop);
   const foot = new THREE.Mesh(FE.ringGeo(0.34, 0.06, 0, 0), new THREE.MeshBasicMaterial({ color: 0xffcf8a, side: THREE.DoubleSide, toneMapped: false }));
   foot.position.y = 0.05; scene.add(foot);
 
@@ -1552,9 +1707,9 @@ FE.createTrail = (renderer, camera) => {
   };
 };
 
-/* ===== 40 사람: 북위 37.5°, 동쪽을 바라보고 서 있음 (크기는 보이도록 과장) ===== */
+/* ===== 40 사람: 선택한 도시의 위도에 서서 동쪽을 바라봄 (크기는 보이도록 과장) ===== */
 FE.createPerson = scene => {
-  const C = FE.CFG, rKm = (90 - C.PERSON_LAT) * C.KM_PER_DEG;      // ≈ 5,838 km
+  const C = FE.CFG;
   const g = new THREE.Group();
   const body = new THREE.MeshBasicMaterial({ color: 0x8fdcff, toneMapped: false });
   const dark = new THREE.MeshBasicMaterial({ color: 0x4aa8d8, toneMapped: false });
@@ -1565,7 +1720,7 @@ FE.createPerson = scene => {
   add(new THREE.CylinderGeometry(0.026, 0.024, 0.22, 10), body, -0.14, 0.36, 0);
   add(new THREE.CylinderGeometry(0.026, 0.024, 0.22, 10), body, 0.14, 0.36, 0);
   add(new THREE.SphereGeometry(0.075, 20, 16), body, 0, 0.55, 0);
-  const nose = add(new THREE.ConeGeometry(0.03, 0.07, 10).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), 0, 0.55, 0.095);
+  add(new THREE.ConeGeometry(0.03, 0.07, 10).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), 0, 0.55, 0.095);
 
   // 발밑 링 + 동쪽 화살표(사람의 정면 = +z)
   const ringM = new THREE.MeshBasicMaterial({ color: 0x8fdcff, side: THREE.DoubleSide, toneMapped: false });
@@ -1573,43 +1728,58 @@ FE.createPerson = scene => {
   const arrM = new THREE.MeshBasicMaterial({ color: 0xeaf6ff, toneMapped: false });
   const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.012, 0.8), arrM); shaft.position.set(0, 0.04, 0.68); g.add(shaft);
   const head = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 14).rotateX(Math.PI / 2), arrM); head.position.set(0, 0.04, 1.18); g.add(head);
-
-  const p = FE.polar(rKm, C.PERSON_PHI, 0);
-  g.position.copy(p);
-  g.lookAt(p.clone().add(FE.eastDir(C.PERSON_PHI)));      // +z 축이 동쪽을 향함
   g.scale.setScalar(2.4);                                 // 보이도록 과장(≈1,400 km)
   scene.add(g);
 
-  // 위치 점선 원(북위 37.5°) - 아주 은은하게
-  const lat = new THREE.Mesh(FE.ringGeo(FE.u(rKm), 0.05, 0.12, 0.2), new THREE.MeshBasicMaterial({ color: 0x5ab8e8, transparent: true, opacity: 0.45, side: THREE.DoubleSide, toneMapped: false }));
+  // 위치 점선 원(도시의 위도) - 아주 은은하게
+  const lat = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: 0x5ab8e8, transparent: true, opacity: 0.45, side: THREE.DoubleSide, toneMapped: false }));
   lat.position.y = 0.02; scene.add(lat);
 
-  // 라벨: 사람 바깥쪽(가장자리 방향)에 두어 몸을 가리지 않게
+  let lab = null, lab2 = null;
   const out = new THREE.Vector3(Math.cos(C.PERSON_PHI), 0, -Math.sin(C.PERSON_PHI));
-  const lab = FE.makeLabel('북위 37.5° · 동쪽을 바라봄', { color: '#a8e6ff', height: 1.0 });
-  lab.position.copy(p).addScaledVector(out, 2.3).add(new THREE.Vector3(0, 0.5, 0)); scene.add(lab);
-  const lab2 = FE.makeLabel('동', { color: '#eaf6ff', height: 0.9 });
-  lab2.position.copy(p).addScaledVector(FE.eastDir(C.PERSON_PHI), 3.6).add(new THREE.Vector3(0, 0.5, 0)); scene.add(lab2);
-  return { position: p, rKm };
+  const api = {
+    rKm: 0,
+    /* 도시가 바뀌면: 사람·위도 원을 새 위도로 옮기고 라벨을 다시 그린다 */
+    place() {
+      const rKm = (90 - C.PERSON_LAT) * C.KM_PER_DEG, p = FE.polar(rKm, C.PERSON_PHI, 0);
+      api.rKm = rKm; api.position = p;
+      g.position.copy(p);
+      g.lookAt(p.clone().add(FE.eastDir(C.PERSON_PHI)));      // +z 축이 동쪽을 향함
+      lat.geometry.dispose(); lat.geometry = FE.ringGeo(Math.max(0.3, FE.u(rKm)), 0.05, 0.12, 0.2);
+      FE.withFont(() => {
+        if (lab) FE.disposeSprite(lab); if (lab2) FE.disposeSprite(lab2);
+        // 라벨: 사람 바깥쪽(가장자리 방향)에 두어 몸을 가리지 않게
+        lab = FE.makeLabel(`${FE.latStr(C.PERSON_LAT)} · ${FE.cityName()}`, { color: '#a8e6ff', height: 1.0 });
+        lab.position.copy(p).addScaledVector(out, 2.3).add(new THREE.Vector3(0, 0.5, 0)); scene.add(lab);
+        lab2 = FE.makeLabel(FE.t('east'), { color: '#eaf6ff', height: 0.9 });
+        lab2.position.copy(p).addScaledVector(FE.eastDir(C.PERSON_PHI), 3.6).add(new THREE.Vector3(0, 0.5, 0)); scene.add(lab2);
+      });
+    }
+  };
+  return api;
 };
 
 /* ===== 50 오른쪽 정보 패널(실시간) ===== */
 FE.createPanel = () => {
   const $ = id => document.getElementById(id);
-  const pp = FE.polar((90 - FE.CFG.PERSON_LAT) * FE.CFG.KM_PER_DEG, FE.CFG.PERSON_PHI);
-  const el = { pd: $('vPd'), pe: $('vPe'), ps: $('vPs'), date: $('vDate'), time: $('vTime'), lat: $('vLat'), r: $('vR'), v: $('vV'), fill: $('mFill'), dot: $('mDot'), dayNo: $('vDayNo') };
+  const el = { pd: $('vPd'), pe: $('vPe'), ps: $('vPs'), date: $('vDate'), time: $('vTime'), lat: $('vLat'), r: $('vR'), v: $('vV'), fill: $('mFill'), dot: $('mDot'), dayNo: $('vDayNo'), sub: $('vSub'), ph: $('vPh') };
   const rows = [...document.querySelectorAll('#cmp tbody tr')];
   const V0 = 2 * Math.PI * FE.CFG.R_B / 24, V1 = 2 * Math.PI * FE.CFG.R_C / 24;   // 1,938 ~ 3,302
   const base = Date.UTC(2026, 5, 21);                                               // 6월 21일(하지)
   const pad = n => String(n).padStart(2, '0');
   return {
+    setCity() {                                                                     // 도시·언어가 바뀔 때
+      const v = { city: FE.cityName(), lat: FE.latStr(FE.CFG.PERSON_LAT) };
+      el.sub.textContent = FE.t('sub', v); el.ph.textContent = FE.t('ph', v);
+    },
     update(T, rangeKm) {
       const s = FE.sunState(T), d = new Date(base + Math.floor(T) * 86400000);
+      const pp = FE.polar((90 - FE.CFG.PERSON_LAT) * FE.CFG.KM_PER_DEG, FE.CFG.PERSON_PHI);
       const h = (T - Math.floor(T)) * 24, hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
-      el.date.textContent = `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
+      el.date.textContent = FE.fmtDate(d.getUTCMonth() + 1, d.getUTCDate());
       el.time.textContent = `${pad(hh)}:${pad(mm)}`;
       const a = Math.abs(s.decl);
-      el.lat.textContent = a < 0.005 ? '적도 0.00°' : `${s.decl > 0 ? '북위' : '남위'} ${a.toFixed(2)}°`;
+      el.lat.textContent = a < 0.005 ? FE.t('eq') : FE.latStr(s.decl, 2);
       el.r.textContent = `${FE.fmt(s.rKm)} km`;
       el.v.textContent = `${FE.fmt(s.speed)} km/h`;
       const f = Math.min(1, Math.max(0, (s.speed - V0) / (V1 - V0)));
@@ -1618,7 +1788,7 @@ FE.createPanel = () => {
       const sp = FE.polar(s.rKm, s.phi), dKm = sp.distanceTo(pp) * FE.CFG.UNIT_KM;     // 사람 ~ 태양 바로 밑 거리
       const elev = Math.atan2(FE.CFG.SUN_H_KM, dKm) * 180 / Math.PI, inside = dKm <= rangeKm;
       el.pd.textContent = `${FE.fmt(dKm)} km`; el.pe.textContent = `${elev.toFixed(1)}°`;
-      el.ps.textContent = inside ? '빛 범위 안 · 낮' : '빛 범위 밖 · 밤'; el.ps.className = inside ? 'day' : 'night';
+      el.ps.textContent = FE.t(inside ? 'inRange' : 'outRange'); el.ps.className = inside ? 'day' : 'night';
       const k = s.rKm < (FE.CFG.R_B + FE.CFG.R_EQ) / 2 ? 'B' : (s.rKm < (FE.CFG.R_EQ + FE.CFG.R_C) / 2 ? 'E' : 'C');
       rows.forEach(r => r.classList.toggle('on', r.dataset.k === k));
     }
@@ -1631,7 +1801,7 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
   const play = $('btnPlay'), slider = $('sDay');
   let dragging = false;
 
-  const setPlay = on => { if (!on) state.live = false; state.playing = on; play.textContent = on ? '⏸ 일시정지' : '▶ 재생'; };
+  const setPlay = on => { if (!on) state.live = false; state.playing = on; play.textContent = FE.t(on ? 'pause' : 'play'); };
   play.onclick = () => setPlay(!state.playing);
   addEventListener('keydown', e => { if (e.code === 'Space' && e.target.tagName !== 'BUTTON') { e.preventDefault(); setPlay(!state.playing); } });
 
@@ -1663,19 +1833,26 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
   });
 
   const pt = $('panelToggle'), panel = $('panel');
-  const setCollapsed = c => { panel.classList.toggle('collapsed', c); pt.textContent = c ? '펼치기' : '접기'; cam.layout(); };
+  const setCollapsed = c => { panel.classList.toggle('collapsed', c); pt.textContent = FE.t(c ? 'expand' : 'collapse'); pt.setAttribute('aria-label', FE.t(c ? 'expandAria' : 'collapseAria')); cam.layout(); };
   pt.onclick = () => setCollapsed(!panel.classList.contains('collapsed'));
   if (innerWidth < 720) setCollapsed(true);
 
   return {
     sync(T) { if (!dragging) slider.value = Math.min(365, Math.floor(T)); },
-    markView: mark
+    markView: mark,
+    relabel() {                                                // 언어가 바뀌면 코드가 직접 쓰는 글자를 다시 쓴다
+      play.textContent = FE.t(state.playing ? 'pause' : 'play');
+      setCollapsed(panel.classList.contains('collapsed'));
+      $('btnNow').title = FE.t('nowT', { city: FE.cityName() });
+      $('btnLang').textContent = FE.t('langBtn'); $('btnLang').title = FE.t('lang');
+      const mb = $('btnMore'); if (mb) mb.textContent = FE.t($('bar').classList.contains('open') ? 'moreOpen' : 'moreClosed');
+    }
   };
 };
 
 /* ===== 90 메인: 렌더러 · 카메라 · 루프 ===== */
 (async function () {
-  try { await Promise.race([document.fonts.load(`700 40px ${FE.CFG.FONT}`, '북극적도회귀선'), new Promise(r => setTimeout(r, 1800))]); } catch (e) {}
+  try { await Promise.race([document.fonts.load(`700 40px ${FE.CFG.FONT}`, FE.fontText()), new Promise(r => setTimeout(r, 1800))]); } catch (e) {}
 
   const stage = document.getElementById('stage');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
@@ -1720,15 +1897,26 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
   const ground = FE.createGround(scene);
   const sun = FE.createSun(scene);
   const trail = FE.createTrail(renderer, camera); scene.add(trail.object);
-  FE.createPerson(scene);
+  const person = FE.createPerson(scene);
   const panel = FE.createPanel();
 
-  const state = { T: 0.5, playing: true, speed: 1, range: FE.CFG.RANGE.area };
+  const state = { T: 0.5, playing: true, speed: 1, range: FE.CFG.RANGE.real };
   const refresh = () => {
     const s = FE.sunState(state.T), p = FE.polar(s.rKm, s.phi);
     sun.setPosition(p.x, p.z); trail.update(state.T); panel.update(state.T, state.range); if (typeof ui !== 'undefined') ui.sync(state.T);
   };
   var ui = FE.createControls(state, cam, refresh, km => { sun.setRange(km); refresh(); });
+
+  const sel = document.getElementById('citySel');
+  sel.onchange = () => FE.pickCity(sel.value);
+  document.getElementById('btnLang').onclick = () => FE.setLang(FE.lang === 'ko' ? 'en' : 'ko');
+  FE.onChange = () => {                        // 도시나 언어가 바뀔 때마다 한 번에 갱신
+    FE.applyI18n(); FE.buildCitySelect();
+    ground.userData.setLon(FE.city.lon); ground.userData.relabel(); person.place(); panel.setCity(); ui.relabel();
+    if (state.live) state.T = FE.nowT();
+    refresh();
+  };
+  FE.onChange();
 
   addEventListener('resize', cam.layout); cam.layout();
   camera.position.set(...VIEWS.tilt.pos).multiplyScalar(cam.fit); controls.update();
