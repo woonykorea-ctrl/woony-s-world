@@ -60,7 +60,7 @@ input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
 .seg button{background:none;border:0;padding:6px 12px;font-size:13px;color:var(--dim);border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:#ffa24a26;color:var(--hot);font-weight:700}
-.gBox{width:min(100%,320px);aspect-ratio:1/1;margin:2px auto 0}
+.gBox{width:min(100%,440px);aspect-ratio:5/4;margin:2px auto 0}
 .gBox canvas{display:block;width:100%;height:100%}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:12.5px;color:var(--dim)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -443,7 +443,7 @@ function drawMap(s) {
 var glC = $('gl'), gctx = glC.getContext('2d'), gOff = document.createElement('canvas'), GN = 320;
 gOff.width = gOff.height = GN;
 function drawGlobe(s) {
-  var sz = sizeCanvas(glC, gctx), W = sz.w, c = CITIES[state.city];
+  var sz = sizeCanvas(glC, gctx), W = sz.w, H = sz.h, c = CITIES[state.city];
   var dl = s.dec * D2R, sl = s.subLon * D2R, sunView = state.view === 'sun';
   var ph = sunView ? 0 : c[3] * D2R, la = sunView ? (s.subLon - 90) * D2R : c[4] * D2R;
   var cv = [Math.cos(ph) * Math.cos(la), Math.cos(ph) * Math.sin(la), Math.sin(ph)];
@@ -477,29 +477,40 @@ function drawGlobe(s) {
     d[o] = rr; d[o + 1] = gg; d[o + 2] = bb; d[o + 3] = 255;
   }
   octx.putImageData(im, 0, 0);
-  gctx.clearRect(0, 0, W, W);
-  var P = 32, R = W / 2 - P;
-  gctx.imageSmoothingEnabled = true; gctx.drawImage(gOff, P, P, W - 2 * P, W - 2 * P);
-  gctx.strokeStyle = '#3a4258'; gctx.lineWidth = 1.2; gctx.beginPath(); gctx.arc(W / 2, W / 2, R, 0, TAU); gctx.stroke();
+  gctx.clearRect(0, 0, W, H);
+  var P = 34, R = H / 2 - P, gcx = sunView ? W * 0.38 : W / 2, gcy = H / 2;
+  gctx.imageSmoothingEnabled = true; gctx.drawImage(gOff, gcx - R, gcy - R, 2 * R, 2 * R);
+  gctx.strokeStyle = '#3a4258'; gctx.lineWidth = 1.2; gctx.beginPath(); gctx.arc(gcx, gcy, R, 0, TAU); gctx.stroke();
+  /* 태양: 지구에서 멀리, 태양 방향에 크게. 평행한 햇빛 화살표가 지구로 향한다 */
   if (sv[0] * cv[0] + sv[1] * cv[1] + sv[2] * cv[2] > -0.001) {
     var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2], sm = Math.sqrt(sx * sx + sy * sy) || 1;
-    var gx = W / 2 + sx / sm * (R + 17), gy = W / 2 - sy / sm * (R + 17);        /* 태양은 지구 밖, 태양 방향에 둔다 */
-    gctx.strokeStyle = '#ffd23d88'; gctx.lineWidth = 1.5; gctx.setLineDash([3, 3]); gctx.beginPath(); gctx.moveTo(W / 2 + sx / sm * R, W / 2 - sy / sm * R); gctx.lineTo(gx, gy); gctx.stroke(); gctx.setLineDash([]);
-    gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(gx, gy, 6.5, 0, TAU); gctx.fill(); gctx.strokeStyle = '#05060a'; gctx.lineWidth = 1.2; gctx.stroke();
-    if (sunView) { gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'top'; gctx.fillText(tr().sunWord, gx, gy + 11); }
+    var dx = sx / sm, dy = -sy / sm, tx = dx > 0 ? (W - 30 - gcx) / dx : dx < 0 ? (gcx - 30) / -dx : 1e9, ty = dy > 0 ? (H - 30 - gcy) / dy : dy < 0 ? (gcy - 30) / -dy : 1e9;
+    var D = Math.max(R + 22, Math.min(tx, ty)), sx0 = gcx + dx * D, sy0 = gcy + dy * D, px = -dy, py = dx;
+    if (D > R + 70) {
+      gctx.strokeStyle = 'rgba(255,210,61,.6)'; gctx.fillStyle = 'rgba(255,210,61,.6)'; gctx.lineWidth = 1.6;
+      [-0.6, -0.3, 0, 0.3, 0.6].forEach(function (o) {
+        var ex = gcx + dx * Math.sqrt(R * R * (1 - o * o)) + px * o * R, ey = gcy + dy * Math.sqrt(R * R * (1 - o * o)) + py * o * R, bx = ex + dx * 46, by = ey + dy * 46;
+        gctx.beginPath(); gctx.moveTo(bx, by); gctx.lineTo(ex + dx * 3, ey + dy * 3); gctx.stroke();
+        gctx.beginPath(); gctx.moveTo(ex, ey); gctx.lineTo(ex + dx * 8 + px * 4, ey + dy * 8 + py * 4); gctx.lineTo(ex + dx * 8 - px * 4, ey + dy * 8 - py * 4); gctx.closePath(); gctx.fill();
+      });
+    }
+    var gl = gctx.createRadialGradient(sx0, sy0, 4, sx0, sy0, 34); gl.addColorStop(0, 'rgba(255,210,61,.55)'); gl.addColorStop(1, 'rgba(255,210,61,0)');
+    gctx.fillStyle = gl; gctx.beginPath(); gctx.arc(sx0, sy0, 34, 0, TAU); gctx.fill();
+    gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(sx0, sy0, 13, 0, TAU); gctx.fill(); gctx.strokeStyle = '#fff3b0'; gctx.lineWidth = 1.5; gctx.stroke();
+    gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'top'; gctx.fillText(tr().sunWord, sx0, Math.min(H - 16, sy0 + 18));
   }
   /* 지축(분홍)과 공전면에 수직인 선(점선): 둘 사이 각이 지축 기울기 */
   function axisLine(vec, color, dash, label) {
     var ax = vec[0] * ev[0] + vec[1] * ev[1] + vec[2] * ev[2], ay = vec[0] * nv[0] + vec[1] * nv[1] + vec[2] * nv[2], L = R + 16;
     gctx.strokeStyle = color; gctx.lineWidth = 2; gctx.setLineDash(dash); gctx.beginPath();
-    gctx.moveTo(W / 2 - ax * L, W / 2 + ay * L); gctx.lineTo(W / 2 + ax * L, W / 2 - ay * L); gctx.stroke(); gctx.setLineDash([]);
-    if (label) { gctx.fillStyle = color; gctx.font = '700 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'middle'; gctx.fillText(label, W / 2 + ax * (L + 10), W / 2 - ay * (L + 10)); }
+    gctx.moveTo(gcx - ax * L, gcy + ay * L); gctx.lineTo(gcx + ax * L, gcy - ay * L); gctx.stroke(); gctx.setLineDash([]);
+    if (label) { gctx.fillStyle = color; gctx.font = '700 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'middle'; gctx.fillText(label, gcx + ax * (L + 10), gcy - ay * (L + 10)); }
   }
   axisLine(kv, '#9aa3b8', [5, 4], '');
   axisLine([0, 0, 1], '#ff8fc4', [], 'N');
   var cc = [Math.cos(c[3] * D2R) * Math.cos(c[4] * D2R), Math.cos(c[3] * D2R) * Math.sin(c[4] * D2R), Math.sin(c[3] * D2R)];
   if (cc[0] * cv[0] + cc[1] * cv[1] + cc[2] * cv[2] > 0.02) {
-    var cx = W / 2 + (cc[0] * ev[0] + cc[1] * ev[1] + cc[2] * ev[2]) * R, cy = W / 2 - (cc[0] * nv[0] + cc[1] * nv[1] + cc[2] * nv[2]) * R;
+    var cx = gcx + (cc[0] * ev[0] + cc[1] * ev[1] + cc[2] * ev[2]) * R, cy = gcy - (cc[0] * nv[0] + cc[1] * nv[1] + cc[2] * nv[2]) * R;
     gctx.strokeStyle = '#fff'; gctx.lineWidth = 2; gctx.beginPath(); gctx.arc(cx, cy, 6, 0, TAU); gctx.stroke();
     gctx.fillStyle = '#fff'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'bottom'; gctx.fillText(cname(c), cx, cy - 10);
   }
