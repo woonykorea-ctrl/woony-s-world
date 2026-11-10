@@ -22,6 +22,11 @@ SIMS = [
          desc=dict(ko="평면 지구 지도 모델에서 태양이 그리는 경로를 3D로 봅니다. 도시를 고르면 그 위치를 기준으로 하루의 태양 움직임이 나타납니다.",
                    en="See the sun's path on a flat-map model of the Earth in 3D. Choose a city and follow the sun's movement over the day from that location."),
          play=True),
+    dict(id="orbit", href="orbit-sun-earth.html", status="live", thumb="orbit", tag=dict(ko="궤도", en="Orbits"),
+         title=dict(ko="지구 공전 궤도 시뮬레이터", en="Earth Orbit Simulator"),
+         desc=dict(ko="날짜 슬라이더로 태양 둘레를 도는 지구와 기울어진 지축을 따라가며 계절이 생기는 이유를 확인합니다. 달의 궤적도 켜 볼 수 있습니다.",
+                   en="Follow Earth around the Sun with a date slider and see how its tilted axis causes the seasons. You can also switch on the Moon's path."),
+         play=False),
     dict(id="compare", href=None, status="soon", thumb="compare", tag=dict(ko="비교", en="Compare"),
          title=dict(ko="평면 모델 vs 지구본 나란히 비교", en="Flat Model vs Globe, Side by Side"),
          desc=dict(ko="같은 도시, 같은 날짜에서 두 모델이 보여 주는 태양의 움직임을 한 화면에서 비교합니다.",
@@ -38,7 +43,7 @@ QA = [
     dict(q=dict(ko="계절은 왜 바뀔까요?", en="Why do the seasons change?"),
          a=dict(ko="지축이 약 23.44° 기울어 있어서, 일 년 동안 태양빛이 가장 직접 닿는 위도가 남북으로 오갑니다. 날짜 슬라이더를 춘분·하지·추분·동지로 옮겨 보세요.",
                 en="The Earth's axis is tilted by about 23.44°, so the latitude where sunlight arrives most directly shifts north and south through the year. Move the date slider to the equinoxes and solstices."),
-         links=["globe"]),
+         links=["orbit", "globe"]),
     dict(q=dict(ko="같은 날인데 도시마다 해의 높이가 다른 이유는?", en="Why does the sun's height differ from city to city on the same day?"),
          a=dict(ko="도시마다 위도와 경도가 달라서 같은 순간에도 현지 시각과 태양을 보는 각도가 다릅니다. 도시를 바꿔 가며 태양 고도와 낮의 길이를 비교해 보세요.",
                 en="Each city has a different latitude and longitude, so the local time and the angle to the sun differ at the same moment. Switch cities and compare sun elevation and day length."),
@@ -55,6 +60,14 @@ QA = [
          a=dict(ko="같은 도시와 날짜를 두고 두 시뮬레이터를 번갈아 열어 보면 태양의 움직임이 어떻게 다른지 직접 비교할 수 있습니다. 한 화면에서 나란히 보는 비교 페이지도 준비 중입니다.",
                 en="Open both simulators with the same city and date to compare how the sun moves in each. A side-by-side comparison page is on the way."),
          links=["globe", "flat"]),
+    dict(q=dict(ko="여름에는 지구가 태양에 더 가까울까요?", en="Is Earth closer to the Sun in summer?"),
+         a=dict(ko="아닙니다. 지구는 1월 초에 태양과 가장 가깝고 7월 초에 가장 멉니다. 계절은 거리가 아니라 지축의 기울기 때문에 생깁니다. 공전 시뮬레이터에서 날짜를 움직이며 태양까지 거리를 확인해 보세요.",
+                en="No. Earth is closest to the Sun in early January and farthest in early July. The seasons come from the tilt of the axis, not from distance. Move the date in the orbit simulator and watch the distance."),
+         links=["orbit"]),
+    dict(q=dict(ko="달은 태양 둘레를 어떻게 움직일까요?", en="How does the Moon move around the Sun?"),
+         a=dict(ko="달은 지구 둘레를 약 27.3일에 한 바퀴 돌면서 지구와 함께 태양 둘레를 돕니다. 태양 쪽에서 보면 달의 길은 고리를 만들지 않고 완만하게 휘어 있습니다. 시뮬레이터에서 달 궤적을 켜 볼 수 있습니다. 달 거리는 과장해서 그렸습니다.",
+                en="The Moon circles Earth in about 27.3 days while travelling with Earth around the Sun. Seen from the Sun, its path never loops and only curves gently. Switch on the Moon path in the simulator. The Moon's distance is exaggerated."),
+         links=["orbit"]),
 ]
 
 T = dict(
@@ -109,6 +122,14 @@ THUMBS = dict(
 <path d="M30 92 C 60 8, 180 8, 210 92" fill="none" stroke="#ffd23d" stroke-width="2" stroke-dasharray="5 4"/>
 <circle cx="150" cy="22" r="14" fill="#ffa24a" opacity=".25"/><circle cx="150" cy="22" r="8" fill="#ffd23d"/>
 <circle cx="150" cy="104" r="3.2" fill="#8fdcff"/><line x1="150" y1="30" x2="150" y2="101" stroke="#ffd23d" stroke-opacity=".3" stroke-dasharray="2 3"/></svg>''',
+    orbit='''<svg viewBox="0 0 240 148" role="img" aria-hidden="true"><defs>
+<radialGradient id="os" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd23d"/><stop offset=".55" stop-color="#ffa24a"/><stop offset="1" stop-color="#ffa24a" stop-opacity="0"/></radialGradient></defs>
+<circle cx="120" cy="74" r="32" fill="url(#os)" opacity=".85"/><circle cx="120" cy="74" r="10" fill="#ffd23d"/>
+<circle cx="120" cy="74" r="62" fill="none" stroke="#f0be3c" stroke-opacity=".6" stroke-width="1.6"/>
+<line x1="120" y1="74" x2="170" y2="110" stroke="#ffd23d" stroke-opacity=".3" stroke-dasharray="3 3"/>
+<circle cx="170" cy="110" r="6.5" fill="#2f7bd0"/><path d="M170 103.5 a6.5 6.5 0 0 0 0 13 a3.6 6.5 0 0 1 0 -13z" fill="#0a1a33" opacity=".8"/>
+<line x1="170" y1="110" x2="170" y2="94" stroke="#fff" stroke-opacity=".6" stroke-dasharray="2 2"/>
+<circle cx="182" cy="116" r="2.4" fill="#e6e6e0"/></svg>''',
     compare='''<svg viewBox="0 0 240 148" role="img" aria-hidden="true">
 <ellipse cx="62" cy="86" rx="46" ry="14" fill="#143222" stroke="#3b4a66" stroke-dasharray="4 3"/>
 <path d="M22 80 C 34 28, 90 28, 102 80" fill="none" stroke="#ffd23d" stroke-width="1.6" stroke-dasharray="4 3"/>
