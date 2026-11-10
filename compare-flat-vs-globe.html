@@ -272,7 +272,7 @@ var T = {
     evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', evToday:'오늘',
     lgFlat:'평면: 빛이 닿는 범위', lgGlobe:'지구본: 낮과 밤의 경계', lgSun:'태양 바로 밑', lgAgree:'두 모델이 일치', lgDiff:'두 모델이 다름',
     mapNote:'북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다. 해안선은 Natural Earth 110m 공개 데이터입니다.',
-    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', vwSun:'태양 기준', vwCity:'도시 기준', sunWord:'태양', tiltWord:'지축 기울기', gNoteSun:'태양은 오른쪽에 고정돼 있고 지구가 자전합니다. 흰 원이 선택한 도시이며 뒷면에 있으면 보이지 않습니다. 분홍 선은 지축, 점선은 공전면에 수직인 선이며 둘 사이 각이 지축 기울기 23.44°입니다.', gNoteCity:'선택한 도시를 가운데 고정해 본 시점입니다. 대륙은 그대로이고 태양과 낮·밤 경계가 움직입니다. 분홍 선은 지축, 점선은 공전면에 수직인 선입니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
+    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', vwSun:'태양 기준', vwCity:'도시 기준', sunWord:'태양', tiltWord:'지축 기울기', gNoteSun:'공전면이 수평이 되게 놓고 본 모습입니다. 태양은 오른쪽에 고정돼 있고 지구가 자전합니다. 흰 원은 선택한 도시(뒷면이면 보이지 않음), 분홍 선은 지축, 점선은 공전면에 수직인 선이며 둘 사이 각이 지축 기울기 23.44°입니다.', gNoteCity:'선택한 도시를 가운데 고정해 본 시점입니다. 대륙은 그대로이고 태양과 낮·밤 경계가 움직입니다. 분홍 선은 지축, 점선은 공전면에 수직인 선입니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
     rElev:'태양 고도', rDN:'낮·밤', rLen:'낮의 길이', rRise:'해 뜸~해 짐', rDist:'태양 바로 밑까지',
     day:'낮', night:'밤', allDay:'하루 종일 낮', allNight:'하루 종일 밤', hours:'시간', never:'—',
     modelNote:'지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.',
@@ -296,7 +296,7 @@ var T = {
     evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', evToday:'Today',
     lgFlat:'Flat: reach of the light', lgGlobe:'Globe: day/night boundary', lgSun:'Point under the Sun', lgAgree:'Models agree', lgDiff:'Models differ',
     mapNote:'North-pole azimuthal equidistant map. Tap a dot to switch city. Coastlines: Natural Earth 110m, public domain.',
-    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', vwSun:'Sun-fixed', vwCity:'City-fixed', sunWord:'Sun', tiltWord:'Axial tilt', gNoteSun:'The Sun stays fixed on the right while Earth rotates. The white ring is the selected city (hidden when on the far side). The pink line is Earth’s axis, the dashed line is perpendicular to the orbital plane; the angle between them is the 23.44° axial tilt.', gNoteCity:'View fixed on the selected city. The continents stay put while the Sun and the day/night boundary move. Pink: Earth’s axis; dashed: perpendicular to the orbital plane.', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
+    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', vwSun:'Sun-fixed', vwCity:'City-fixed', sunWord:'Sun', tiltWord:'Axial tilt', gNoteSun:'Seen with the orbital plane horizontal. The Sun stays fixed on the right while Earth rotates. The white ring is the selected city (hidden on the far side); the pink line is Earth’s axis and the dashed line is perpendicular to the orbital plane. The angle between them is the 23.44° axial tilt.', gNoteCity:'View fixed on the selected city. The continents stay put while the Sun and the day/night boundary move. Pink: Earth’s axis; dashed: perpendicular to the orbital plane.', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
     rElev:'Sun elevation', rDN:'Day / night', rLen:'Day length', rRise:'Sunrise – sunset', rDist:'Distance to point under Sun',
     day:'Day', night:'Night', allDay:'Day all day', allNight:'Night all day', hours:'h', never:'—',
     modelNote:'The globe uses spherical astronomy; the flat model assumes a Sun 5,000 km high and light reaching 11,300 km.',
@@ -450,6 +450,15 @@ function drawGlobe(s) {
   var ev = [-Math.sin(la), Math.cos(la), 0];
   var nv = [-Math.sin(ph) * Math.cos(la), -Math.sin(ph) * Math.sin(la), Math.cos(ph)];
   var sv = [Math.cos(dl) * Math.cos(sl), Math.cos(dl) * Math.sin(sl), Math.sin(dl)];
+  var zs = sv[2], uu = [-zs * sv[0], -zs * sv[1], 1 - zs * sv[2]], un = Math.sqrt(uu[0] * uu[0] + uu[1] * uu[1] + uu[2] * uu[2]);
+  uu = [uu[0] / un, uu[1] / un, uu[2] / un];
+  var ww = [sv[1] * uu[2] - sv[2] * uu[1], sv[2] * uu[0] - sv[0] * uu[2], sv[0] * uu[1] - sv[1] * uu[0]];
+  var al = Math.cos(TILT * D2R) / Math.cos(dl), be = Math.sqrt(Math.max(0, 1 - al * al)); if (Math.cos(TAU * (state.d - EQUINOX_D) / YEAR) < 0) be = -be;
+  var kv = [al * uu[0] + be * ww[0], al * uu[1] + be * ww[1], al * uu[2] + be * ww[2]];
+  if (sunView) {            /* 공전면이 수평이 되게: 태양은 오른쪽, 공전면에 수직인 선은 위쪽 */
+    ev = sv.slice(); nv = kv.slice();
+    cv = [ev[1] * nv[2] - ev[2] * nv[1], ev[2] * nv[0] - ev[0] * nv[2], ev[0] * nv[1] - ev[1] * nv[0]];
+  }
   var octx = gOff.getContext('2d'), im = octx.createImageData(GN, GN), d = im.data, i, j;
   for (j = 0; j < GN; j++) for (i = 0; i < GN; i++) {
     var x = (i + 0.5) / GN * 2 - 1, y = 1 - (j + 0.5) / GN * 2, r2 = x * x + y * y, o = (j * GN + i) * 4;
@@ -478,11 +487,6 @@ function drawGlobe(s) {
     if (sunView) { gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'right'; gctx.textBaseline = 'middle'; gctx.fillText('\u2600 ' + tr().sunWord, gx - 12, gy); }
   }
   /* 지축(분홍)과 공전면에 수직인 선(점선): 둘 사이 각이 지축 기울기 */
-  var zs = sv[2], uu = [-zs * sv[0], -zs * sv[1], 1 - zs * sv[2]], un = Math.sqrt(uu[0] * uu[0] + uu[1] * uu[1] + uu[2] * uu[2]);
-  uu = [uu[0] / un, uu[1] / un, uu[2] / un];
-  var ww = [sv[1] * uu[2] - sv[2] * uu[1], sv[2] * uu[0] - sv[0] * uu[2], sv[0] * uu[1] - sv[1] * uu[0]];
-  var al = Math.cos(TILT * D2R) / Math.cos(dl), be = Math.sqrt(Math.max(0, 1 - al * al)); if (Math.cos(TAU * (state.d - EQUINOX_D) / YEAR) < 0) be = -be;
-  var kv = [al * uu[0] + be * ww[0], al * uu[1] + be * ww[1], al * uu[2] + be * ww[2]];
   function axisLine(vec, color, dash, label) {
     var ax = vec[0] * ev[0] + vec[1] * ev[1] + vec[2] * ev[2], ay = vec[0] * nv[0] + vec[1] * nv[1] + vec[2] * nv[2], L = R + 16;
     gctx.strokeStyle = color; gctx.lineWidth = 2; gctx.setLineDash(dash); gctx.beginPath();
@@ -491,7 +495,6 @@ function drawGlobe(s) {
   }
   axisLine(kv, '#9aa3b8', [5, 4], '');
   axisLine([0, 0, 1], '#ff8fc4', [], 'N');
-  gctx.fillStyle = '#ff8fc4'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'left'; gctx.textBaseline = 'top'; gctx.fillText(tr().tiltWord + ' 23.44°', 6, 6);
   var cc = [Math.cos(c[3] * D2R) * Math.cos(c[4] * D2R), Math.cos(c[3] * D2R) * Math.sin(c[4] * D2R), Math.sin(c[3] * D2R)];
   if (cc[0] * cv[0] + cc[1] * cv[1] + cc[2] * cv[2] > 0.02) {
     var cx = W / 2 + (cc[0] * ev[0] + cc[1] * ev[1] + cc[2] * ev[2]) * R, cy = W / 2 - (cc[0] * nv[0] + cc[1] * nv[1] + cc[2] * nv[2]) * R;
