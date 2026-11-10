@@ -56,6 +56,8 @@ input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
 .stage{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
 .mapBox{position:relative;width:min(100%,600px);aspect-ratio:1/1;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#05060a}
 .mapBox canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+.gBox{width:min(100%,320px);aspect-ratio:1/1;margin:2px auto 0}
+.gBox canvas{display:block;width:100%;height:100%}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:12.5px;color:var(--dim)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{display:inline-block;width:14px;height:0;border-top:3px solid}
@@ -162,6 +164,9 @@ td b{font-weight:600}
       </table>
       <div class="agree" id="agree">—</div>
       <p class="sub" data-i18n="modelNote">지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.</p>
+      <h2 data-i18n="gTitle">지구본으로 본 모습</h2>
+      <div class="gBox"><canvas id="gl" role="img"></canvas></div>
+      <p class="sub" data-i18n="gNote">선택한 도시를 가운데 두고 본 지구입니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.</p>
     </section>
   </main>
 
@@ -242,7 +247,7 @@ var T = {
     evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', evToday:'오늘',
     lgFlat:'평면: 빛이 닿는 범위', lgGlobe:'지구본: 낮과 밤의 경계', lgSun:'태양 바로 밑', lgAgree:'두 모델이 일치', lgDiff:'두 모델이 다름',
     mapNote:'북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다.',
-    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면',
+    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', gNote:'선택한 도시를 가운데 두고 본 지구입니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
     rElev:'태양 고도', rDN:'낮·밤', rLen:'낮의 길이', rRise:'해 뜸~해 짐', rDist:'태양 바로 밑까지',
     day:'낮', night:'밤', allDay:'하루 종일 낮', allNight:'하루 종일 밤', hours:'시간', never:'—',
     modelNote:'지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.',
@@ -266,7 +271,7 @@ var T = {
     evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', evToday:'Today',
     lgFlat:'Flat: reach of the light', lgGlobe:'Globe: day/night boundary', lgSun:'Point under the Sun', lgAgree:'Models agree', lgDiff:'Models differ',
     mapNote:'North-pole azimuthal equidistant map. Tap a dot to switch city.',
-    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat',
+    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', gNote:'Earth viewed with the selected city at the center. Blue is day, dark is night.', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
     rElev:'Sun elevation', rDN:'Day / night', rLen:'Day length', rRise:'Sunrise – sunset', rDist:'Distance to point under Sun',
     day:'Day', night:'Night', allDay:'Day all day', allNight:'Night all day', hours:'h', never:'—',
     modelNote:'The globe uses spherical astronomy; the flat model assumes a Sun 5,000 km high and light reaching 11,300 km.',
@@ -334,13 +339,33 @@ function sizeCanvas(cv, ctx) {
 }
 function mp(lat, lon) { var r = (90 - lat) * KM * geo.k, l = lon * D2R; return [geo.cx + r * Math.sin(l), geo.cy + r * Math.cos(l)]; }
 function drawMap(s) {
-  var sz = sizeCanvas(mapC, mctx), W = sz.w, ctx = mctx;
-  geo.cx = W / 2; geo.cy = W / 2; geo.R = W / 2 - 16; geo.k = geo.R / DISC;
+  var sz = sizeCanvas(mapC, mctx), W = sz.w, ctx = mctx, j;
+  geo.cx = W / 2; geo.cy = W / 2; geo.R = W / 2 - 28; geo.k = geo.R / DISC;
   ctx.clearRect(0, 0, W, W);
   ctx.fillStyle = '#080b13'; ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.fill();
   ctx.save(); ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.clip();
-  /* 평면 모델: 빛이 닿는 범위 */
+  /* 지구본: 낮과 밤의 경계 = 태양 바로 밑에서 90° 떨어진 큰 원 */
+  var dl = s.dec * D2R, sl = s.subLon * D2R;
+  var sv = [Math.cos(dl) * Math.cos(sl), Math.cos(dl) * Math.sin(sl), Math.sin(dl)];
+  var u = [-Math.sin(sl), Math.cos(sl), 0];
+  var v = [sv[1] * u[2] - sv[2] * u[1], sv[2] * u[0] - sv[0] * u[2], sv[0] * u[1] - sv[1] * u[0]];
+  var tp = [], i;
+  for (i = 0; i <= 360; i++) {
+    var t = i * D2R, px = u[0] * Math.cos(t) + v[0] * Math.sin(t), py = u[1] * Math.cos(t) + v[1] * Math.sin(t), pz = u[2] * Math.cos(t) + v[2] * Math.sin(t);
+    tp.push(mp(Math.asin(Math.max(-1, Math.min(1, pz))) / D2R, Math.atan2(py, px) / D2R));
+  }
   var sp = mp(s.dec, s.subLon), rr = RANGE * geo.k;
+  var inside = false;
+  for (i = 0, j = tp.length - 1; i < tp.length; j = i++) {
+    if ((tp[i][1] > sp[1]) !== (tp[j][1] > sp[1]) && sp[0] < (tp[j][0] - tp[i][0]) * (sp[1] - tp[i][1]) / (tp[j][1] - tp[i][1]) + tp[i][0]) inside = !inside;
+  }
+  /* 지구본의 낮 쪽(푸른 면) */
+  var dg = ctx.createRadialGradient(sp[0], sp[1], 0, sp[0], sp[1], geo.R * 1.1);
+  dg.addColorStop(0, 'rgba(90,184,255,.34)'); dg.addColorStop(1, 'rgba(90,184,255,.14)');
+  ctx.fillStyle = dg; ctx.beginPath();
+  if (!inside) { ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); }
+  tp.forEach(function (q, n) { if (n === 0) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]); });
+  ctx.closePath(); ctx.fill('evenodd');
   ctx.fillStyle = 'rgba(255,162,74,.13)'; ctx.beginPath(); ctx.arc(sp[0], sp[1], rr, 0, TAU); ctx.fill();
   /* 위도·경도선 */
   ctx.strokeStyle = '#1e2536'; ctx.lineWidth = 1;
@@ -349,17 +374,8 @@ function drawMap(s) {
   ctx.strokeStyle = '#ffa24a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sp[0], sp[1], rr, 0, TAU); ctx.stroke();
   ctx.restore();
   ctx.strokeStyle = '#3a4258'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.stroke();
-  /* 지구본: 낮과 밤의 경계 = 태양 바로 밑에서 90° 떨어진 큰 원 */
-  var dl = s.dec * D2R, sl = s.subLon * D2R;
-  var sv = [Math.cos(dl) * Math.cos(sl), Math.cos(dl) * Math.sin(sl), Math.sin(dl)];
-  var u = [-Math.sin(sl), Math.cos(sl), 0];
-  var v = [sv[1] * u[2] - sv[2] * u[1], sv[2] * u[0] - sv[0] * u[2], sv[0] * u[1] - sv[1] * u[0]];
   ctx.strokeStyle = '#8fdcff'; ctx.lineWidth = 2.2; ctx.beginPath();
-  for (var i = 0; i <= 360; i++) {
-    var t = i * D2R, px = u[0] * Math.cos(t) + v[0] * Math.sin(t), py = u[1] * Math.cos(t) + v[1] * Math.sin(t), pz = u[2] * Math.cos(t) + v[2] * Math.sin(t);
-    var p = mp(Math.asin(Math.max(-1, Math.min(1, pz))) / D2R, Math.atan2(py, px) / D2R);
-    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
-  }
+  tp.forEach(function (q, n) { if (n === 0) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]); });
   ctx.stroke();
   /* 도시 */
   geo.pts = [];
@@ -379,10 +395,49 @@ function drawMap(s) {
   ctx.fillStyle = '#8b93a7'; ctx.font = '11.5px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('N', geo.cx, geo.cy - 10);
   var lab = [['0°', 0], ['90°E', 90], ['180°', 180], ['90°W', 270]];
-  lab.forEach(function (e) { var l = e[1] * D2R, rx = geo.cx + (geo.R + 9) * Math.sin(l), ry = geo.cy + (geo.R + 8) * Math.cos(l); ctx.fillText(e[0], rx, ry); });
+  lab.forEach(function (e) { var l = e[1] * D2R, rx = geo.cx + (geo.R + 15) * Math.sin(l), ry = geo.cy + (geo.R + 13) * Math.cos(l); if (e[1] === 90) { ctx.textAlign = 'right'; rx = W - 3; } else if (e[1] === 270) { ctx.textAlign = 'left'; rx = 3; } else ctx.textAlign = 'center'; ctx.fillText(e[0], rx, ry); });
   /* 선택 도시 이름 */
   ctx.textAlign = cq[0] > W * 0.6 ? 'right' : 'left'; ctx.fillStyle = '#fff'; ctx.font = '600 12.5px system-ui,sans-serif';
   ctx.fillText(cname(sc), cq[0] + (cq[0] > W * 0.6 ? -12 : 12), cq[1] - 12);
+}
+
+/* ================= 지구본 음영 (선택한 도시가 가운데) ================= */
+var glC = $('gl'), gctx = glC.getContext('2d'), gOff = document.createElement('canvas'), GN = 320;
+gOff.width = gOff.height = GN;
+function drawGlobe(s) {
+  var sz = sizeCanvas(glC, gctx), W = sz.w, c = CITIES[state.city];
+  var ph = c[3] * D2R, la = c[4] * D2R, dl = s.dec * D2R, sl = s.subLon * D2R;
+  var cv = [Math.cos(ph) * Math.cos(la), Math.cos(ph) * Math.sin(la), Math.sin(ph)];
+  var ev = [-Math.sin(la), Math.cos(la), 0];
+  var nv = [-Math.sin(ph) * Math.cos(la), -Math.sin(ph) * Math.sin(la), Math.cos(ph)];
+  var sv = [Math.cos(dl) * Math.cos(sl), Math.cos(dl) * Math.sin(sl), Math.sin(dl)];
+  var octx = gOff.getContext('2d'), im = octx.createImageData(GN, GN), d = im.data, i, j;
+  for (j = 0; j < GN; j++) for (i = 0; i < GN; i++) {
+    var x = (i + 0.5) / GN * 2 - 1, y = 1 - (j + 0.5) / GN * 2, r2 = x * x + y * y, o = (j * GN + i) * 4;
+    if (r2 >= 1) { d[o + 3] = 0; continue; }
+    var z = Math.sqrt(1 - r2);
+    var px = x * ev[0] + y * nv[0] + z * cv[0], py = x * ev[1] + y * nv[1] + z * cv[1], pz = x * ev[2] + y * nv[2] + z * cv[2];
+    var light = px * sv[0] + py * sv[1] + pz * sv[2];
+    var tt = Math.max(0, Math.min(1, (light + 0.08) / 0.2)); tt = tt * tt * (3 - 2 * tt);
+    var dI = 0.5 + 0.5 * Math.max(0, light);
+    var rr = 12 + (70 * dI - 12) * tt, gg = 20 + (160 * dI - 20) * tt, bb = 38 + (255 * dI - 38) * tt;
+    var limb = 0.55 + 0.45 * z; rr *= limb; gg *= limb; bb *= limb;
+    var lat = Math.asin(Math.max(-1, Math.min(1, pz))) / D2R, lon = Math.atan2(py, px) / D2R;
+    var dla = Math.abs(lat - 30 * Math.round(lat / 30)), lm = ((lon % 30) + 30) % 30, dlo = Math.min(lm, 30 - lm) * Math.max(0.2, Math.cos(lat * D2R));
+    if (dla < 0.7 || dlo < 0.7) { rr = rr * 0.78 + 255 * 0.22; gg = gg * 0.78 + 255 * 0.22; bb = bb * 0.78 + 255 * 0.22; }
+    d[o] = rr; d[o + 1] = gg; d[o + 2] = bb; d[o + 3] = 255;
+  }
+  octx.putImageData(im, 0, 0);
+  gctx.clearRect(0, 0, W, W);
+  gctx.imageSmoothingEnabled = true; gctx.drawImage(gOff, 1, 1, W - 2, W - 2);
+  gctx.strokeStyle = '#3a4258'; gctx.lineWidth = 1.2; gctx.beginPath(); gctx.arc(W / 2, W / 2, W / 2 - 1, 0, TAU); gctx.stroke();
+  var R = W / 2 - 1;
+  if (sv[0] * cv[0] + sv[1] * cv[1] + sv[2] * cv[2] > 0) {
+    var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2];
+    gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(W / 2 + sx * R, W / 2 - sy * R, 5.5, 0, TAU); gctx.fill(); gctx.strokeStyle = '#05060a'; gctx.lineWidth = 1.2; gctx.stroke();
+  }
+  gctx.strokeStyle = '#fff'; gctx.lineWidth = 2; gctx.beginPath(); gctx.arc(W / 2, W / 2, 6, 0, TAU); gctx.stroke();
+  gctx.fillStyle = '#fff'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'bottom'; gctx.fillText(cname(c), W / 2, W / 2 - 11);
 }
 
 /* ================= 그래프 ================= */
@@ -440,7 +495,7 @@ function render() {
   var n = s.agree, p = Math.round(n / CITIES.length * 100);
   $('agree').innerHTML = t.agree.replace('{n}', n).replace('{p}', p);
   $('tblTitle').textContent = t.tblTitle + ' · ' + cname(CITIES[state.city]) + ' · ' + dateStr(state.d) + ' ' + hm(state.h);
-  drawMap(s); drawCharts(s);
+  drawMap(s); drawGlobe(s); drawCharts(s);
   window.__CMP = { s: s, state: state };
 }
 
@@ -453,7 +508,7 @@ function applyLang() {
   var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', t.desc);
   $('btnLang').textContent = state.lang === 'ko' ? 'EN' : '한국어';
   $('home').setAttribute('href', state.lang === 'en' ? 'en/?lang=en' : './?lang=ko');
-  $('map').setAttribute('aria-label', t.ariaMap); $('c1').setAttribute('aria-label', t.ariaC1); $('c2').setAttribute('aria-label', t.ariaC2);
+  $('map').setAttribute('aria-label', t.ariaMap); $('c1').setAttribute('aria-label', t.ariaC1); $('gl').setAttribute('aria-label', t.ariaGlobe); $('c2').setAttribute('aria-label', t.ariaC2);
   var sel = $('selCity'); sel.innerHTML = '';
   var idx = CITIES.map(function (c, i) { return i; });
   idx.sort(function (a, b) { return cname(CITIES[a]).localeCompare(cname(CITIES[b]), state.lang); });
