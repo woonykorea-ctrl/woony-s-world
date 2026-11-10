@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지구 공전 궤도 시뮬레이터 · 계절이 생기는 이유</title>
+<meta name="description" content="태양 둘레를 도는 지구와 기울어진 지축을 날짜 슬라이더로 따라가며 계절이 생기는 이유를 확인하세요. 춘분·하지·추분·동지, 태양까지의 거리, 달의 궤적까지 브라우저에서 바로 볼 수 있습니다.">
+<link rel="canonical" href="https://woonykorea-ctrl.github.io/woony-s-world/orbit-sun-earth.html">
+<meta name="theme-color" content="#05060a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="우니의 과학 시뮬레이터">
+<meta property="og:title" content="지구 공전 궤도 시뮬레이터 · 계절이 생기는 이유">
+<meta property="og:description" content="날짜 슬라이더로 지구의 공전과 기울어진 지축을 따라가며 계절이 생기는 이유를 확인하세요.">
+<meta property="og:url" content="https://woonykorea-ctrl.github.io/woony-s-world/orbit-sun-earth.html">
+<meta property="og:image" content="https://woonykorea-ctrl.github.io/woony-s-world/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#05060a; --panel:#0f121a; --line:#262c3b; --text:#e8ebf2; --dim:#8b93a7;
+  --hot:#ffa24a; --yellow:#ffd23d; --blue:#8fdcff;
+  --font:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Noto Sans CJK KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+[hidden]{display:none!important}
+button{font-family:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 18px}
+
+/* 상단 바 */
+.bar{display:flex;align-items:center;gap:12px;padding:14px 0}
+.home{flex:none;display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#0f121ae0;
+  font-size:13px;font-weight:600;text-decoration:none}
+.home:hover{border-color:var(--dim)}
+.ttl{flex:1;min-width:0}
+.ttl h1{margin:0;font-size:clamp(16px,3.6vw,20px);line-height:1.25;letter-spacing:-.3px}
+.ttl p{margin:2px 0 0;font-size:12.5px;color:var(--dim)}
+.ghost{flex:none;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px;color:var(--dim)}
+.ghost:hover{color:var(--text);border-color:var(--dim)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* 본문 배치: 왼쪽 궤도+조작, 오른쪽 패널 */
+.stage{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.orbitBox{position:relative;width:min(100%,660px);aspect-ratio:1/1;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#05060a}
+.orbitBox canvas{display:block;width:100%;height:100%}
+.note{margin:8px 2px 0;font-size:12.5px;color:var(--dim)}
+
+.ctrl{margin-top:12px;padding:12px 14px;display:grid;gap:10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.play{min-width:104px;padding:9px 16px;border-radius:999px;border:1px solid var(--hot);background:var(--hot);color:#1a1206;font-weight:700;font-size:14px}
+.play:hover{background:#ffb468}
+.sliderWrap{flex:1 1 200px;min-width:0}
+input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
+.dayNo{flex:none;font-weight:700;font-size:16px;min-width:5.5em;text-align:right}
+.lbl{font-size:12.5px;color:var(--dim);margin-right:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{background:none;border:0;padding:6px 11px;font-size:13px;color:var(--dim);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#ffa24a26;color:var(--hot);font-weight:700}
+.chip{background:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--text)}
+.chip:hover{border-color:var(--dim)}
+.tog{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;user-select:none}
+.tog input{accent-color:var(--hot);width:16px;height:16px;margin:0}
+
+/* 패널 */
+.panel{padding:14px 16px 16px;display:grid;gap:12px}
+.panel h2{margin:0;font-size:15px;letter-spacing:-.2px}
+.sideBox{position:relative;width:100%;aspect-ratio:10/7;border:1px solid var(--line);border-radius:12px;background:#080b13;overflow:hidden}
+.sideBox canvas{display:block;width:100%;height:100%}
+.rows{display:grid;gap:7px}
+.r{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:14px}
+.r span{color:var(--dim);flex:none}
+.r b{font-weight:600;text-align:right}
+.r b.hot{color:var(--hot)}
+.sub{font-size:12px;color:var(--dim);margin-top:-3px;text-align:right}
+.meter{margin-top:2px}
+.track{position:relative;height:8px;border-radius:6px;background:linear-gradient(90deg,#2b5fa0,#2a3350 50%,#a8531f)}
+.track i{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:2px solid var(--hot)}
+.track u{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#ffffff66}
+.ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-top:5px;gap:6px}
+.ends span:nth-child(2){text-align:center}
+.ends span:last-child{text-align:right}
+.moonNote{font-size:12.5px;color:var(--dim);margin:0}
+
+/* 설명 글 */
+.explain{margin:34px 0 10px;max-width:46em}
+.explain h2{margin:0 0 10px;font-size:clamp(19px,4vw,24px);letter-spacing:-.4px}
+.explain p{margin:0 0 12px;color:#c3c9d8;font-size:15px}
+.explain .more{margin-top:18px;padding:14px 16px}
+.explain .more a{color:var(--hot);font-weight:600;text-decoration:none}
+.explain .more a:hover{text-decoration:underline}
+.foot{margin-top:26px;padding:18px 0 34px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;color:var(--dim);font-size:13.5px}
+.foot a{text-decoration:none;color:var(--dim)}
+.foot a:hover{color:var(--text);text-decoration:underline}
+
+@media (max-width:900px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .wrap{padding:0 14px}
+  .bar{gap:8px}
+  .home{padding:0 10px}
+  .ctrl{padding:11px 12px}
+  .dayNo{min-width:0;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a id="home" class="home" href="./?lang=ko" data-i18n="home">← 홈</a>
+    <div class="ttl">
+      <h1 data-i18n="title">지구 공전 궤도 시뮬레이터</h1>
+      <p data-i18n="subtitle">태양 둘레를 도는 지구와 기울어진 지축 — 계절이 생기는 이유</p>
+    </div>
+    <button id="btnLang" class="ghost" type="button" aria-label="Language">EN</button>
+  </header>
+
+  <main class="stage">
+    <section>
+      <div class="orbitBox"><canvas id="orbit" role="img" aria-label="지구 공전 궤도"></canvas></div>
+      <p class="note" data-i18n="scaleNote">크기와 거리는 보기 쉽게 줄이거나 키워서 그렸습니다. 실제 비율이 아닙니다.</p>
+
+      <div class="ctrl card">
+        <div class="row">
+          <button id="btnPlay" class="play" type="button">⏸</button>
+          <div class="sliderWrap"><input id="sDay" type="range" min="0" max="365" step="0.01" value="0" aria-label="날짜"></div>
+          <div class="dayNo" id="vDate">—</div>
+        </div>
+        <div class="row">
+          <span class="lbl" data-i18n="lblJump">계절 지점으로</span>
+          <button class="chip" type="button" data-ev="0" data-i18n="evSpring">춘분</button>
+          <button class="chip" type="button" data-ev="1" data-i18n="evSummer">하지</button>
+          <button class="chip" type="button" data-ev="2" data-i18n="evAutumn">추분</button>
+          <button class="chip" type="button" data-ev="3" data-i18n="evWinter">동지</button>
+          <button class="chip" type="button" id="btnToday" data-i18n="today">오늘 날짜</button>
+        </div>
+        <div class="row">
+          <span class="lbl" data-i18n="lblSpeed">재생 속도</span>
+          <span class="seg" id="speedSeg">
+            <button type="button" data-sp="1" aria-pressed="false" data-i18n="sp1">1일/초</button>
+            <button type="button" data-sp="7" aria-pressed="true" data-i18n="sp7">7일/초</button>
+            <button type="button" data-sp="30" aria-pressed="false" data-i18n="sp30">30일/초</button>
+          </span>
+          <label class="tog"><input id="chkMoon" type="checkbox"><span data-i18n="moon">달 궤적 보기</span></label>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel card">
+      <h2 data-i18n="sideTitle">옆에서 본 지구</h2>
+      <div class="sideBox"><canvas id="side" role="img" aria-label="옆에서 본 지구"></canvas></div>
+      <div class="rows">
+        <div class="r"><span data-i18n="rSeason">계절 (북반구 기준)</span><b id="vSeason">—</b></div>
+        <div class="r"><span data-i18n="rDecl">태양 바로 밑 위도</span><b id="vDecl" class="hot">—</b></div>
+        <div class="meter">
+          <div class="track"><u></u><i id="mDot"></i></div>
+          <div class="ends"><span data-i18n="gS">남회귀선 −23.44°</span><span data-i18n="gE">적도</span><span data-i18n="gN">북회귀선 +23.44°</span></div>
+        </div>
+        <div class="r"><span data-i18n="rDist">태양까지 거리</span><b id="vDist">—</b></div>
+        <div class="sub" data-i18n="distNote">근일점 1월 3일경 · 원일점 7월 4일경</div>
+        <div class="r"><span data-i18n="rPole">북극점</span><b id="vPole">—</b></div>
+        <div class="r" id="rMoon" hidden><span data-i18n="rMoonAge">달의 나이(월령)</span><b id="vMoon">—</b></div>
+      </div>
+      <p class="moonNote" id="moonNote" hidden data-i18n="moonNote">달 궤적의 물결은 달 궤도를 크게 그린 탓입니다. 실제 크기라면 태양 둘레를 도는 완만한 곡선입니다.</p>
+    </aside>
+  </main>
+
+  <article class="explain">
+    <h2 data-i18n="exH">계절은 왜 생길까요?</h2>
+    <p data-i18n="ex1">계절을 만드는 것은 태양까지의 거리가 아니라 지구 자전축의 기울기(약 23.44°)입니다. 자전축은 공전하는 내내 같은 방향을 가리키기 때문에, 공전 궤도 위의 위치에 따라 북반구와 남반구가 번갈아 태양 쪽으로 기웁니다.</p>
+    <p data-i18n="ex2">하지(6월 21일경)에는 북극 쪽이 태양을 향해 기울어 북반구에 햇빛이 더 곧게, 더 오래 닿습니다. 동지(12월 21일경)에는 반대입니다. 춘분과 추분(3월 20~21일경, 9월 22~23일경)에는 태양 바로 밑 지점이 적도 위에 있어 낮과 밤의 길이가 거의 같습니다.</p>
+    <p data-i18n="ex3">지구는 1월 초에 태양과 가장 가깝고(약 1억 4,700만 km) 7월 초에 가장 멉니다(약 1억 5,200만 km). 북반구의 여름이 태양에서 가장 먼 때라는 점이 계절이 거리 때문이 아니라는 증거입니다.</p>
+    <p data-i18n="ex4">‘달 궤적 보기’를 켜면 한 해 동안 달이 태양 둘레에서 그리는 길을 볼 수 있습니다. 달은 약 27.3일에 지구를 한 바퀴 돌고, 보름달에서 다음 보름달까지는 약 29.5일이 걸립니다.</p>
+    <div class="card more"><a id="moreLink" href="globe-sun-path.html" data-i18n="more">지구본 3D 태양 시뮬레이터에서 도시를 골라 계절별 낮의 길이와 태양 고도를 확인해 보세요 →</a></div>
+  </article>
+
+  <footer class="foot">
+    <a href="privacy.html" data-i18n="privacy">개인정보처리방침</a>
+    <span>© 2026 Woony.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+'use strict';
+var D2R = Math.PI / 180, TAU = Math.PI * 2;
+
+/* ================= 문구 (한/영) ================= */
+var T = {
+  ko: {
+    home:'← 홈', title:'지구 공전 궤도 시뮬레이터', subtitle:'태양 둘레를 도는 지구와 기울어진 지축 — 계절이 생기는 이유',
+    scaleNote:'크기와 거리는 보기 쉽게 줄이거나 키워서 그렸습니다. 실제 비율이 아닙니다.',
+    lblJump:'계절 지점으로', evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', today:'오늘 날짜',
+    lblSpeed:'재생 속도', sp1:'1일/초', sp7:'7일/초', sp30:'30일/초', moon:'달 궤적 보기',
+    sideTitle:'옆에서 본 지구', rSeason:'계절 (북반구 기준)', rDecl:'태양 바로 밑 위도',
+    gS:'남회귀선 −23.44°', gE:'적도', gN:'북회귀선 +23.44°',
+    rDist:'태양까지 거리', distNote:'근일점 1월 3일경 · 원일점 7월 4일경', rPole:'북극점', rMoonAge:'달의 나이(월령)',
+    moonNote:'달 궤적의 물결은 달 궤도를 크게 그린 탓입니다. 실제 크기라면 태양 둘레를 도는 완만한 곡선입니다.',
+    play:'▶ 재생', pause:'⏸ 일시정지',
+    topNote:'북극 위에서 내려다본 모습', sunLbl:'태양', earthLbl:'지구', dir:'공전 방향 ↺',
+    night:'밤', day:'낮', axisN:'N',
+    seasons:['봄','여름','가을','겨울'], seasonFmt:function(a,b){return '북반구 '+a+' · 남반구 '+b;},
+    north:'북위', south:'남위', polarDay:'해가 지지 않음(백야)', polarNight:'해가 뜨지 않음(극야)', polarMix:'낮과 밤이 교대',
+    days:'일', date:function(m,d){return m+'월 '+d+'일';},
+    ariaOrbit:function(o){return '지구 공전 궤도. '+o;}, ariaSide:'옆에서 본 지구와 지축 기울기',
+    exH:'계절은 왜 생길까요?',
+    ex1:'계절을 만드는 것은 태양까지의 거리가 아니라 지구 자전축의 기울기(약 23.44°)입니다. 자전축은 공전하는 내내 같은 방향을 가리키기 때문에, 공전 궤도 위의 위치에 따라 북반구와 남반구가 번갈아 태양 쪽으로 기웁니다.',
+    ex2:'하지(6월 21일경)에는 북극 쪽이 태양을 향해 기울어 북반구에 햇빛이 더 곧게, 더 오래 닿습니다. 동지(12월 21일경)에는 반대입니다. 춘분과 추분(3월 20~21일경, 9월 22~23일경)에는 태양 바로 밑 지점이 적도 위에 있어 낮과 밤의 길이가 거의 같습니다.',
+    ex3:'지구는 1월 초에 태양과 가장 가깝고(약 1억 4,700만 km) 7월 초에 가장 멉니다(약 1억 5,200만 km). 북반구의 여름이 태양에서 가장 먼 때라는 점이 계절이 거리 때문이 아니라는 증거입니다.',
+    ex4:'‘달 궤적 보기’를 켜면 한 해 동안 달이 태양 둘레에서 그리는 길을 볼 수 있습니다. 달은 약 27.3일에 지구를 한 바퀴 돌고, 보름달에서 다음 보름달까지는 약 29.5일이 걸립니다.',
+    more:'지구본 3D 태양 시뮬레이터에서 도시를 골라 계절별 낮의 길이와 태양 고도를 확인해 보세요 →', privacy:'개인정보처리방침',
+    pageTitle:'지구 공전 궤도 시뮬레이터 · 계절이 생기는 이유'
+  },
+  en: {
+    home:'← Home', title:'Earth Orbit Simulator', subtitle:'Earth circling the Sun with a tilted axis — why we have seasons',
+    scaleNote:'Sizes and distances are shrunk or enlarged for clarity. Not to scale.',
+    lblJump:'Jump to', evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', today:'Today',
+    lblSpeed:'Speed', sp1:'1 d/s', sp7:'7 d/s', sp30:'30 d/s', moon:'Show Moon path',
+    sideTitle:'Earth seen from the side', rSeason:'Season (Northern Hemisphere)', rDecl:'Subsolar latitude',
+    gS:'Tropic of Capricorn −23.44°', gE:'Equator', gN:'Tropic of Cancer +23.44°',
+    rDist:'Distance to the Sun', distNote:'Perihelion around Jan 3 · aphelion around Jul 4', rPole:'North Pole', rMoonAge:'Moon age',
+    moonNote:'The waves in the Moon path come from drawing its orbit large. At true scale it is a gentle curve around the Sun.',
+    play:'▶ Play', pause:'⏸ Pause',
+    topNote:'Looking down from above the North Pole', sunLbl:'Sun', earthLbl:'Earth', dir:'Orbit direction ↺',
+    night:'Night', day:'Day', axisN:'N',
+    seasons:['spring','summer','autumn','winter'], seasonFmt:function(a,b){return 'North: '+a+' · South: '+b;},
+    north:'N', south:'S', polarDay:'Sun never sets (midnight sun)', polarNight:'Sun never rises (polar night)', polarMix:'Day and night alternate',
+    days:'d', date:function(m,d){return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]+' '+d;},
+    ariaOrbit:function(o){return 'Earth orbit around the Sun. '+o;}, ariaSide:'Earth seen from the side showing axial tilt',
+    exH:'Why do we have seasons?',
+    ex1:'Seasons come from the tilt of Earth’s axis (about 23.44°), not from the distance to the Sun. The axis keeps pointing the same way all year, so depending on where Earth is on its orbit, the northern or southern hemisphere leans toward the Sun.',
+    ex2:'Around the June solstice (June 21) the North Pole leans toward the Sun, so the northern hemisphere gets more direct and longer sunlight. At the December solstice (December 21) it is the opposite. At the equinoxes (around March 20–21 and September 22–23) the point directly under the Sun is on the equator and day and night are nearly equal.',
+    ex3:'Earth is closest to the Sun in early January (about 147 million km) and farthest in early July (about 152 million km). That northern summer happens when Earth is farthest from the Sun shows that distance is not the cause of the seasons.',
+    ex4:'Turn on “Show Moon path” to see the route the Moon traces around the Sun over a year. The Moon circles Earth in about 27.3 days, and one full Moon to the next takes about 29.5 days.',
+    more:'Open the Globe 3D Sun Simulator to pick a city and compare day length and sun elevation across the seasons →', privacy:'Privacy Policy',
+    pageTitle:'Earth Orbit Simulator · Why We Have Seasons'
+  }
+};
+var DESC = {
+  ko:'태양 둘레를 도는 지구와 기울어진 지축을 날짜 슬라이더로 따라가며 계절이 생기는 이유를 확인하세요. 춘분·하지·추분·동지, 태양까지의 거리, 달의 궤적까지 브라우저에서 바로 볼 수 있습니다.',
+  en:'Follow Earth around the Sun with a date slider and see how its tilted axis causes the seasons. Explore equinoxes, solstices, the Earth-Sun distance and the Moon’s path right in your browser.'
+};
+
+/* ================= 천문 계산 ================= */
+var EPS = 23.44 * D2R, E_ORB = 0.0167086, T_ANOM = 365.2596, D_PERI = 2.72, VARPI = 103.39 * D2R, AU_KM = 149597870.7;
+var T_SIN = 27.321661, T_SYN = 29.530589, NEW_MOON_D = 17.83; // 2026-01-18 19:52 UTC 신월
+var YEAR = 365; // 슬라이더가 한 바퀴로 보는 날수(1월 1일 0시 = 0)
+
+function wrap(a) { a %= TAU; return a < 0 ? a + TAU : a; }
+function kepler(M, e) { var E = M; for (var i = 0; i < 8; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); return E; }
+/** d: 1월 1일 0시(UTC)부터의 일수. 태양 기준 지구의 위치(황도 좌표). L은 지구의 일심 황경 */
+function earthAt(d) {
+  var M = wrap(TAU * (d - D_PERI) / T_ANOM), E = kepler(M, E_ORB);
+  var nu = 2 * Math.atan2(Math.sqrt(1 + E_ORB) * Math.sin(E / 2), Math.sqrt(1 - E_ORB) * Math.cos(E / 2));
+  return { r: 1 - E_ORB * Math.cos(E), L: wrap(nu + VARPI) };
+}
+function declOf(L) { return Math.asin(-Math.sin(EPS) * Math.sin(L)); }         // 태양 바로 밑 위도
+function lamSun(L) { return wrap(L + Math.PI); }                                // 지구에서 본 태양의 황경
+function elongAt(d) { return wrap(TAU * (d - NEW_MOON_D) / T_SYN); }            // 달-태양 이각
+function moonAge(d) { var a = (d - NEW_MOON_D) % T_SYN; return a < 0 ? a + T_SYN : a; }
+
+// 춘분·하지·추분·동지가 오는 날(태양 황경 0·90·180·270°)을 계산
+function findEvents() {
+  var out = [0, 0, 0, 0], targets = [0, 90, 180, 270], step = 0.05, prev = lamSun(earthAt(0).L) / D2R;
+  for (var d = step; d <= 366; d += step) {
+    var cur = lamSun(earthAt(d).L) / D2R, delta = ((cur - prev + 540) % 360) - 180;
+    for (var k = 0; k < 4; k++) {
+      var a = (targets[k] - prev + 360) % 360;
+      if (a > 0 && a <= delta && !out[k]) out[k] = d - step + step * (a / delta);
+    }
+    prev = cur;
+  }
+  return out;
+}
+var EVENTS = findEvents();                                   // [춘분, 하지, 추분, 동지]의 d
+var EV_L = [Math.PI, 1.5 * Math.PI, 0, 0.5 * Math.PI];       // 그 날 지구의 일심 황경
+
+/* ================= 상태·언어 ================= */
+var state = { d: 0, playing: true, speed: 7, moon: false, lang: 'ko', dirty: true };
+var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduced) state.playing = false;
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function detectLang() {
+  var q = /[?&]lang=(ko|en)\b/.exec(location.search); if (q) return q[1];
+  var s = lsGet('fe.orbit.lang') || lsGet('fe.hub.lang'); if (s === 'ko' || s === 'en') return s;
+  var nl = (navigator.languages && navigator.languages[0]) || navigator.language || 'ko';
+  return /^ko/i.test(nl) ? 'ko' : 'en';
+}
+function todayD() {
+  var n = new Date(), y = n.getFullYear();
+  return Math.min(YEAR - 0.01, (Date.UTC(y, n.getMonth(), n.getDate()) - Date.UTC(y, 0, 1)) / 864e5 + n.getHours() / 24);
+}
+function mdOf(d) { var t = new Date(Date.UTC(2026, 0, 1) + Math.floor(d) * 864e5); return [t.getUTCMonth() + 1, t.getUTCDate()]; }
+
+var $ = function (id) { return document.getElementById(id); };
+function tr() { return T[state.lang]; }
+
+function applyLang() {
+  var t = tr();
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t[el.getAttribute('data-i18n')]; if (typeof v === 'string') el.textContent = v; });
+  document.title = t.pageTitle;
+  var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', DESC[state.lang]);
+  $('btnLang').textContent = state.lang === 'ko' ? 'EN' : '한국어';
+  $('home').setAttribute('href', state.lang === 'en' ? 'en/?lang=en' : './?lang=ko');
+  $('home').setAttribute('aria-label', state.lang === 'en' ? 'Back to Woony’s Science Simulators home' : '우니의 과학 시뮬레이터 홈으로');
+  $('side').setAttribute('aria-label', t.ariaSide);
+  $('sDay').setAttribute('aria-label', state.lang === 'en' ? 'Date' : '날짜');
+  setPlayLabel(); state.dirty = true; lastAria = '';
+}
+function setPlayLabel() { $('btnPlay').textContent = state.playing ? tr().pause : tr().play; }
+
+/* ================= 그리기 도구 ================= */
+function rng32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hash(ix, iy) { var h = Math.imul(ix, 374761393) ^ Math.imul(iy, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967295; }
+function vnoise(x, y) {
+  var ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  var a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function makeSun(dpx) { // 영상과 같은 질감: 가장자리 어두워짐 + 알갱이 + 흑점
+  var c = document.createElement('canvas'); c.width = c.height = dpx; var x = c.getContext('2d'), im = x.createImageData(dpx, dpx), dat = im.data;
+  var spots = [[-0.05, -0.12, 0.10], [0.08, -0.02, 0.06], [-0.35, 0.25, 0.05], [0.3, 0.35, 0.04]];
+  for (var py = 0; py < dpx; py++) for (var px = 0; px < dpx; px++) {
+    var nx = (px - (dpx - 1) / 2) / ((dpx - 1) / 2), ny = (py - (dpx - 1) / 2) / ((dpx - 1) / 2), rr = nx * nx + ny * ny, i = (py * dpx + px) * 4;
+    if (rr > 1) { dat[i + 3] = 0; continue; }
+    var nz = Math.sqrt(1 - rr), limb = 0.45 + 0.55 * Math.pow(nz, 0.6);
+    var s = px * 270 / dpx, t = py * 270 / dpx;
+    var gran = vnoise(s / 5, t / 5) * 0.5 + vnoise(s / 10, t / 10) * 0.3 + vnoise(s / 20, t / 20) * 0.2;
+    var sp = 1; for (var k = 0; k < 4; k++) sp -= 0.75 * Math.exp(-((nx - spots[k][0]) * (nx - spots[k][0]) + (ny - spots[k][1]) * (ny - spots[k][1])) / (2 * Math.pow(spots[k][2] / 2, 2)));
+    var b = Math.min(1.3, Math.max(0, limb * (0.7 + 0.6 * gran) * sp));
+    dat[i] = Math.min(255, 255 * (0.95 * b + 0.15)); dat[i + 1] = Math.min(255, 255 * 0.62 * Math.pow(b, 1.2)); dat[i + 2] = Math.min(255, 255 * 0.12 * b * b);
+    dat[i + 3] = Math.min(1, (1 - rr) * 40) * 255;
+  }
+  x.putImageData(im, 0, 0); return c;
+}
+function fit(cv) { // 캔버스를 CSS 크기에 맞춤(고해상도 대응)
+  var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2.5), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return { ctx: ctx, w: w, h: h, dpr: dpr };
+}
+function fontFam() { return getComputedStyle(document.body).fontFamily; }
+function halfDisc(ctx, x, y, R, th) { ctx.beginPath(); ctx.arc(x, y, R, th - Math.PI / 2, th + Math.PI / 2); ctx.closePath(); }
+
+/* ================= 궤도 화면 ================= */
+var orb = { sun: null, sunR: 0, stars: null, sw: 0, sh: 0, moonPath: null, key: '' };
+function drawOrbit(d) {
+  var f = fit($('orbit')), ctx = f.ctx, w = f.w, h = f.h, t = tr();
+  var cx = w / 2, cy = h / 2, Rp = Math.min(w, h) * 0.37, Rs = Rp * 0.09, Re = Math.max(5, Rp * 0.03), Rm = Rp * 0.07, rm = Math.max(2.2, Rp * 0.012);
+  var fs = Math.max(11, Math.min(15, w / 38)), key = w + 'x' + h + ':' + f.dpr;
+  if (orb.key !== key) {
+    orb.key = key; orb.sunR = Rs; orb.sun = makeSun(Math.max(20, Math.round(Rs * 2 * f.dpr)));
+    var st = document.createElement('canvas'); st.width = Math.round(w * f.dpr); st.height = Math.round(h * f.dpr);
+    var sx = st.getContext('2d'); sx.scale(f.dpr, f.dpr); var rnd = rng32(7);
+    for (var i = 0; i < 160; i++) { var g = 60 + rnd() * 130 | 0; sx.fillStyle = 'rgba(' + g + ',' + g + ',' + (g + 15) + ',' + (0.35 + rnd() * 0.5) + ')'; var r = rnd() < 0.1 ? 1.4 : 0.8; sx.fillRect(rnd() * w, rnd() * h, r, r); }
+    orb.stars = st;
+    // 달 궤적(한 해, 크기에 따라 고정)
+    var p = new Path2D(); for (var dd = 0; dd <= YEAR; dd += 0.25) { var pt = moonScreen(dd, cx, cy, Rp, Rm); dd === 0 ? p.moveTo(pt[0], pt[1]) : p.lineTo(pt[0], pt[1]); }
+    orb.moonPath = p;
+  }
+  ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#05060a'; ctx.fillRect(0, 0, w, h); ctx.drawImage(orb.stars, 0, 0, w, h);
+
+  // 태양 빛 번짐
+  var gl = ctx.createRadialGradient(cx, cy, Rs * 0.8, cx, cy, Rs * 3.6); gl.addColorStop(0, 'rgba(255,150,30,.55)'); gl.addColorStop(1, 'rgba(255,120,20,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(cx, cy, Rs * 3.6, 0, TAU); ctx.fill();
+
+  // 공전 궤도(이심률 0.017이라 거의 원)
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(240,190,60,.55)'; ctx.beginPath();
+  for (var a = 0; a <= TAU + 0.02; a += 0.03) { var rr = (1 - E_ORB * E_ORB) / (1 + E_ORB * Math.cos(a - VARPI)); var X = cx + Rp * rr * Math.cos(a), Y = cy - Rp * rr * Math.sin(a); a === 0 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y); }
+  ctx.stroke();
+
+  // 공전 방향 화살표 (위에서 볼 때 반시계)
+  var aa = 40 * D2R, ax = cx + Rp * Math.cos(aa), ay = cy - Rp * Math.sin(aa), tx = -Math.sin(aa), ty = -Math.cos(aa), ah = Math.max(7, Rp * 0.035);
+  ctx.fillStyle = 'rgba(240,190,60,.9)'; ctx.beginPath(); ctx.moveTo(ax + tx * ah, ay + ty * ah); ctx.lineTo(ax - tx * ah * 0.4 - ty * ah * 0.6, ay - ty * ah * 0.4 + tx * ah * 0.6); ctx.lineTo(ax - tx * ah * 0.4 + ty * ah * 0.6, ay - ty * ah * 0.4 - tx * ah * 0.6); ctx.closePath(); ctx.fill();
+
+  // 춘분·하지·추분·동지 지점
+  ctx.font = '600 ' + fs + 'px ' + fontFam(); ctx.textBaseline = 'middle';
+  var names = [t.evSpring, t.evSummer, t.evAutumn, t.evWinter];
+  for (var k = 0; k < 4; k++) {
+    var L = EV_L[k], ex = cx + Rp * Math.cos(L), ey = cy - Rp * Math.sin(L);
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(ex, ey, 3, 0, TAU); ctx.fill();
+    var vert = Math.abs(Math.cos(L)) < 0.3; // 위·아래 지점은 지축 표시(N)와 겹치지 않게 더 멀리
+    ctx.fillStyle = '#c3c9d8'; ctx.textAlign = (!vert && Math.cos(L) > 0) ? 'left' : 'right';   // 위·아래 지점은 왼쪽에 둠(오른쪽은 '지구' 표시 자리)
+    var lx = vert ? ex - Re - 8 : ex + Math.cos(L) * 12, ly = vert ? (Math.sin(L) > 0 ? ey - 11 : ey + 13) : ey;
+    ctx.fillText(names[k], lx, ly);
+  }
+
+  // 달 궤적
+  var e = earthAt(d), ex2 = cx + Rp * e.r * Math.cos(e.L), ey2 = cy - Rp * e.r * Math.sin(e.L);
+  if (state.moon) {
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(190,205,255,.28)'; ctx.stroke(orb.moonPath);
+    ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(210,225,255,.85)'; ctx.beginPath();
+    for (var q = Math.max(0, d - 45), first = true; q <= d + 0.001; q += 0.25) { var mp = moonScreen(q, cx, cy, Rp, Rm); first ? ctx.moveTo(mp[0], mp[1]) : ctx.lineTo(mp[0], mp[1]); first = false; }
+    ctx.stroke();
+  }
+
+  // 태양-지구 선
+  ctx.strokeStyle = 'rgba(255,210,61,.25)'; ctx.lineWidth = 1; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex2, ey2); ctx.stroke(); ctx.setLineDash([]);
+
+  // 태양
+  ctx.drawImage(orb.sun, cx - Rs, cy - Rs, Rs * 2, Rs * 2);
+  ctx.fillStyle = '#e8ebf2'; ctx.textAlign = 'center'; ctx.fillText(t.sunLbl, cx, cy + Rs + 14);
+
+  // 지구(위에서 본 모습): 태양 쪽 절반이 밝음, 지축 기울기는 항상 위쪽(+y)으로
+  var sx2 = -Math.cos(e.L), sy2 = Math.sin(e.L), th = Math.atan2(sy2, sx2); // 화면 좌표의 태양 방향
+  ctx.save(); ctx.beginPath(); ctx.arc(ex2, ey2, Re, 0, TAU); ctx.clip(); ctx.fillStyle = '#0a1a33'; ctx.fillRect(ex2 - Re, ey2 - Re, Re * 2, Re * 2);
+  var eg = ctx.createRadialGradient(ex2 + sx2 * Re * 0.4, ey2 + sy2 * Re * 0.4, 0, ex2, ey2, Re * 1.2); eg.addColorStop(0, '#8fc6ff'); eg.addColorStop(1, '#2b69b0');
+  halfDisc(ctx, ex2, ey2, Re, th); ctx.fillStyle = eg; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex2, ey2, Re, 0, TAU); ctx.stroke();
+  // 지축: 항상 같은 방향(화면 위쪽)으로 기운 모습
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(ex2, ey2); ctx.lineTo(ex2, ey2 - Re * 2.7); ctx.stroke(); ctx.setLineDash([]);
+  var lit = Math.sin(EPS) * Math.sin(e.L + Math.PI) > 0, pd = Math.max(1.8, Re * 0.22);
+  ctx.fillStyle = lit ? '#ffd23d' : '#8fdcff'; ctx.beginPath(); ctx.arc(ex2, ey2 - Re * Math.sin(EPS), pd, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#c3c9d8'; ctx.textAlign = 'center'; ctx.fillText(t.axisN, ex2, ey2 - Re * 2.7 - 9);
+  ctx.fillStyle = '#e8ebf2'; ctx.textAlign = 'left'; ctx.fillText(t.earthLbl, ex2 + Re + 8, ey2 + 1);
+
+  // 달
+  if (state.moon) {
+    var lm = lamSun(e.L) + elongAt(d), mx = ex2 + Rm * Math.cos(lm), my = ey2 - Rm * Math.sin(lm);
+    ctx.fillStyle = '#3a3f4d'; ctx.beginPath(); ctx.arc(mx, my, rm, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e6e6e0'; halfDisc(ctx, mx, my, rm, th); ctx.fill();
+  }
+
+  // 안내 문구
+  ctx.fillStyle = '#8b93a7'; ctx.font = '500 ' + Math.max(11, fs - 1) + 'px ' + fontFam(); ctx.textAlign = 'left'; ctx.fillText(t.topNote, 12, h - 14);
+  ctx.textAlign = 'right'; ctx.fillText(t.dir, w - 12, h - 14);
+  return e;
+}
+function moonScreen(d, cx, cy, Rp, Rm) {
+  var e = earthAt(d), ex = cx + Rp * e.r * Math.cos(e.L), ey = cy - Rp * e.r * Math.sin(e.L), lm = lamSun(e.L) + elongAt(d);
+  return [ex + Rm * Math.cos(lm), ey - Rm * Math.sin(lm)];
+}
+
+/* ================= 옆에서 본 지구 ================= */
+var TILT_VIEW = 18 * D2R;
+function drawSide(delta) {
+  var f = fit($('side')), ctx = f.ctx, w = f.w, h = f.h, t = tr();
+  ctx.clearRect(0, 0, w, h);
+  var R = h * 0.36, cx = w * 0.42, cy = h * 0.5, fs = Math.max(11, Math.min(14, w / 30));
+  // 햇빛(오른쪽에서 평행하게 들어옴)
+  ctx.strokeStyle = 'rgba(255,210,61,.5)'; ctx.fillStyle = 'rgba(255,210,61,.7)'; ctx.lineWidth = 1.4;
+  for (var k = -2; k <= 2; k++) { var y = cy + k * R * 0.32, x0 = w - 8, x1 = cx + R + 14; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x1 - 1, y); ctx.lineTo(x1 + 7, y - 4); ctx.lineTo(x1 + 7, y + 4); ctx.closePath(); ctx.fill(); }
+  // 밤(왼쪽 절반)과 낮(오른쪽 절반)
+  ctx.fillStyle = '#0a1226'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, Math.PI / 2); ctx.closePath();
+  var g = ctx.createRadialGradient(cx + R * 0.4, cy, 0, cx, cy, R * 1.1); g.addColorStop(0, '#79baf5'); g.addColorStop(1, '#1f5a9c'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+
+  // 3D 벡터: x=태양 쪽, y=위, z=보는 사람 쪽. 지축은 태양 쪽으로 δ만큼 기운 상태에서 약간 이쪽으로 눕힘
+  var p = [Math.sin(delta), Math.cos(delta) * Math.cos(TILT_VIEW), Math.cos(delta) * Math.sin(TILT_VIEW)];
+  var e1 = norm(cross(p, [1, 0, 0])), e2 = cross(p, e1);
+  function pt(phi, th) { var s = Math.sin(phi), c = Math.cos(phi), ct = Math.cos(th), st = Math.sin(th); return [s * p[0] + c * (ct * e1[0] + st * e2[0]), s * p[1] + c * (ct * e1[1] + st * e2[1]), s * p[2] + c * (ct * e1[2] + st * e2[2])]; }
+  function line(phi, color, wd, dash) {
+    ctx.lineWidth = wd; ctx.setLineDash(dash || []);
+    for (var pass = 0; pass < 2; pass++) {            // 0: 뒤쪽(흐리게), 1: 앞쪽
+      ctx.strokeStyle = pass ? color : color.replace(/[\d.]+\)$/, '0.18)'); ctx.beginPath(); var pen = false;
+      for (var th = 0; th <= TAU + 0.05; th += 0.05) { var q = pt(phi, th), front = q[2] >= 0; if (front === !!pass) { var X = cx + R * q[0], Y = cy - R * q[1]; pen ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); pen = true; } else pen = false; }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  line(0, 'rgba(255,255,255,.75)', 1.4);
+  line(EPS, 'rgba(255,255,255,.35)', 1); line(-EPS, 'rgba(255,255,255,.35)', 1);
+  line(Math.PI / 2 - EPS, 'rgba(143,220,255,.55)', 1, [3, 3]); line(-(Math.PI / 2 - EPS), 'rgba(143,220,255,.55)', 1, [3, 3]);
+  line(delta, 'rgba(255,162,74,.95)', 1.8, [5, 3]);   // 태양 바로 밑 위도
+
+  // 지축과 극
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(cx - R * 1.3 * p[0], cy + R * 1.3 * p[1]); ctx.lineTo(cx + R * 1.3 * p[0], cy - R * 1.3 * p[1]); ctx.stroke();
+  ctx.font = '700 ' + fs + 'px ' + fontFam(); ctx.fillStyle = '#e8ebf2'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(t.axisN, cx + R * 1.3 * p[0], cy - R * 1.3 * p[1] - 9);
+  // 태양 바로 밑 지점(오른쪽 가장자리)
+  ctx.fillStyle = '#ffa24a'; ctx.beginPath(); ctx.arc(cx + R, cy, 4.5, 0, TAU); ctx.fill();
+  ctx.font = '600 ' + (fs - 1) + 'px ' + fontFam(); ctx.fillStyle = '#ffa24a'; ctx.textAlign = 'right'; ctx.fillText('☀ ' + declText(delta), w - 8, 14);
+  ctx.fillStyle = '#8b93a7'; ctx.textAlign = 'center'; ctx.fillText(t.night, cx - R * 0.5, h - 12); ctx.fillText(t.day, cx + R * 0.5, h - 12);
+}
+function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function norm(a) { var n = Math.hypot(a[0], a[1], a[2]); return [a[0] / n, a[1] / n, a[2] / n]; }
+function declText(delta) { var t = tr(), deg = Math.abs(delta / D2R).toFixed(1); return state.lang === 'ko' ? (delta >= 0 ? t.north : t.south) + ' ' + deg + '°' : deg + '° ' + (delta >= 0 ? t.north : t.south); }
+
+/* ================= 값 표시·조작 ================= */
+var lastAria = '', lastTxt = {};
+function setTxt(id, v) { if (lastTxt[id] !== v) { lastTxt[id] = v; $(id).textContent = v; } }
+function updateReadouts(d, e) {
+  var t = tr(), delta = declOf(e.L), lam = lamSun(e.L) / D2R, md = mdOf(d);
+  setTxt('vDate', t.date(md[0], md[1]));
+  var si = Math.floor(lam / 90) % 4, north = t.seasons[si], south = t.seasons[(si + 2) % 4];
+  setTxt('vSeason', t.seasonFmt(north, south));
+  setTxt('vDecl', declText(delta));
+  $('mDot').style.left = ((delta / EPS + 1) / 2 * 100).toFixed(2) + '%';
+  setTxt('vDist', e.r.toFixed(3) + ' AU · ' + (e.r * AU_KM / 1e6).toFixed(1) + (state.lang === 'ko' ? '백만 km' : ' million km'));
+  var dd = delta / D2R; setTxt('vPole', dd > 0.3 ? t.polarDay : dd < -0.3 ? t.polarNight : t.polarMix);
+  $('rMoon').hidden = !state.moon; $('moonNote').hidden = !state.moon;
+  if (state.moon) setTxt('vMoon', moonAge(d).toFixed(1) + t.days);
+  if (document.activeElement !== $('sDay')) $('sDay').value = d.toFixed(2);
+  var aria = t.ariaOrbit(t.date(md[0], md[1]) + ', ' + t.seasonFmt(north, south) + ', ' + declText(delta));
+  if (aria !== lastAria) { lastAria = aria; $('orbit').setAttribute('aria-label', aria); }
+}
+function render() { var e = drawOrbit(state.d); drawSide(declOf(e.L)); updateReadouts(state.d, e); state.dirty = false; }
+
+var last = 0;
+function loop(ts) {
+  var dt = Math.min(0.1, (ts - last) / 1000); last = ts;
+  if (state.playing) { state.d = (state.d + state.speed * dt) % YEAR; state.dirty = true; }
+  if (state.dirty) render();
+  requestAnimationFrame(loop);
+}
+
+function setDay(d) { state.d = Math.max(0, Math.min(YEAR - 0.001, d)); state.dirty = true; }
+function setPlaying(v) { state.playing = v; setPlayLabel(); }
+
+$('btnPlay').addEventListener('click', function () { setPlaying(!state.playing); });
+$('sDay').addEventListener('input', function () { setPlaying(false); setDay(parseFloat(this.value)); });
+document.querySelectorAll('[data-ev]').forEach(function (b) { b.addEventListener('click', function () { setPlaying(false); setDay(EVENTS[+b.getAttribute('data-ev')]); }); });
+$('btnToday').addEventListener('click', function () { setPlaying(false); setDay(todayD()); });
+document.querySelectorAll('#speedSeg button').forEach(function (b) { b.addEventListener('click', function () {
+  state.speed = +b.getAttribute('data-sp'); document.querySelectorAll('#speedSeg button').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); }); }); });
+$('chkMoon').addEventListener('change', function () { state.moon = this.checked; state.dirty = true; });
+$('btnLang').addEventListener('click', function () { state.lang = state.lang === 'ko' ? 'en' : 'ko'; lsSet('fe.orbit.lang', state.lang); applyLang(); });
+if (window.ResizeObserver) { new ResizeObserver(function () { state.dirty = true; }).observe(document.querySelector('.stage')); }
+window.addEventListener('resize', function () { state.dirty = true; });
+
+state.lang = detectLang();
+state.d = todayD();
+applyLang();
+requestAnimationFrame(function (ts) { last = ts; loop(ts); });
+
+window.__OR = { earthAt: earthAt, declOf: declOf, lamSun: lamSun, EVENTS: EVENTS, state: state, setDay: setDay, render: render, moonAge: moonAge, mdOf: mdOf, AU_KM: AU_KM };
+})();
+</script>
+</body>
+</html>
