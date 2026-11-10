@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>평면 모델 vs 지구본 나란히 비교 · 같은 날 같은 시각의 태양</title>
+<meta name="description" content="도시와 날짜, 현지 태양시를 고르면 평면 모델과 지구본 모델이 계산한 태양 고도, 낮과 밤, 낮의 길이를 한 지도 위에 겹쳐 보여 줍니다. 204개 도시에서 두 모델이 얼마나 일치하는지도 확인하세요.">
+<link rel="canonical" href="https://woonykorea-ctrl.github.io/woony-s-world/compare-flat-vs-globe.html">
+<meta name="theme-color" content="#05060a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="우니의 과학 시뮬레이터">
+<meta property="og:title" content="평면 모델 vs 지구본 나란히 비교">
+<meta property="og:description" content="같은 날 같은 시각, 두 모델이 계산한 태양 고도와 낮·밤을 한 지도 위에서 비교하세요.">
+<meta property="og:url" content="https://woonykorea-ctrl.github.io/woony-s-world/compare-flat-vs-globe.html">
+<meta property="og:image" content="https://woonykorea-ctrl.github.io/woony-s-world/assets/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#05060a; --panel:#0f121a; --line:#262c3b; --text:#e8ebf2; --dim:#8b93a7;
+  --hot:#ffa24a; --yellow:#ffd23d; --blue:#8fdcff; --bad:#ff5a6e;
+  --font:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Noto Sans CJK KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+[hidden]{display:none!important}
+button,select{font-family:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 18px}
+.bar{display:flex;align-items:center;gap:12px;padding:14px 0}
+.home{flex:none;display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#0f121ae0;font-size:13px;font-weight:600;text-decoration:none}
+.home:hover{border-color:var(--dim)}
+.ttl{flex:1;min-width:0}
+.ttl h1{margin:0;font-size:clamp(16px,3.6vw,20px);line-height:1.25;letter-spacing:-.3px}
+.ttl p{margin:2px 0 0;font-size:12.5px;color:var(--dim)}
+.ghost{flex:none;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px;color:var(--dim)}
+.ghost:hover{color:var(--text);border-color:var(--dim)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+
+.ctrl{padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px 18px}
+.fld{display:grid;gap:6px;min-width:0}
+.fld>label,.fld>.lb{font-size:12.5px;color:var(--dim)}
+.fld select{width:100%;background:#080b13;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:14px}
+.fld .line{display:flex;align-items:center;gap:10px}
+.fld .val{flex:none;font-weight:700;font-size:15px;min-width:4.6em;text-align:right}
+input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
+.play{flex:none;min-width:84px;padding:7px 12px;border-radius:999px;border:1px solid var(--hot);background:var(--hot);color:#1a1206;font-weight:700;font-size:13.5px}
+.play:hover{background:#ffb468}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;color:var(--text)}
+.chip:hover{border-color:var(--dim)}
+.tnote{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--dim)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
+.mapBox{position:relative;width:min(100%,600px);aspect-ratio:1/1;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#05060a}
+.mapBox canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:12.5px;color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:0;border-top:3px solid}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.note{margin:8px 2px 0;font-size:12.5px;color:var(--dim)}
+
+.panel{padding:14px 16px 16px;display:grid;gap:10px}
+.panel h2{margin:0;font-size:15px;letter-spacing:-.2px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:baseline}
+th:first-child,td:first-child{text-align:left;color:var(--dim);font-weight:400;padding-left:0}
+thead th{font-size:13px;font-weight:700;border-bottom:1px solid var(--dim)}
+thead th.g{color:var(--blue)} thead th.f{color:var(--hot)}
+td b{font-weight:600}
+.agree{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#080b13;font-size:14px}
+.agree b{font-size:18px}
+.sub{font-size:12px;color:var(--dim);margin:0}
+
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.chart{padding:12px 14px 14px}
+.chart h2{margin:0 0 8px;font-size:15px;letter-spacing:-.2px}
+.cbox{position:relative;width:100%;aspect-ratio:16/10;border-radius:10px;background:#080b13;border:1px solid var(--line);overflow:hidden}
+.cbox canvas{display:block;width:100%;height:100%}
+.clg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:12.5px;color:var(--dim)}
+.clg span{display:inline-flex;align-items:center;gap:6px}
+
+.explain{margin:34px 0 10px;max-width:46em}
+.explain h2{margin:0 0 10px;font-size:clamp(19px,4vw,24px);letter-spacing:-.4px}
+.explain p{margin:0 0 12px;color:#c3c9d8;font-size:15px}
+.explain .more{margin-top:18px;padding:14px 16px;display:grid;gap:6px}
+.explain .more a{color:var(--hot);font-weight:600;text-decoration:none}
+.explain .more a:hover{text-decoration:underline}
+.foot{margin-top:26px;padding:18px 0 34px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;color:var(--dim);font-size:13.5px}
+.foot a{text-decoration:none;color:var(--dim)}
+.foot a:hover{color:var(--text);text-decoration:underline}
+
+@media (max-width:900px){
+  .stage,.charts{grid-template-columns:minmax(0,1fr)}
+  .ctrl{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .wrap{padding:0 14px}
+  .bar{gap:8px}
+  .home{padding:0 10px}
+  .ctrl{padding:11px 12px}
+  .panel{padding:12px 12px 14px}
+  th,td{padding:7px 3px;font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a id="home" class="home" href="./?lang=ko" data-i18n="home">← 홈</a>
+    <div class="ttl">
+      <h1 data-i18n="title">평면 모델 vs 지구본 나란히 비교</h1>
+      <p data-i18n="subtitle">같은 날, 같은 시각, 같은 도시에서 두 모델이 계산한 태양</p>
+    </div>
+    <button id="btnLang" class="ghost" type="button" aria-label="Language">EN</button>
+  </header>
+
+  <section class="ctrl card" aria-label="controls">
+    <div class="fld">
+      <label for="selCity" data-i18n="lblCity">도시</label>
+      <select id="selCity"></select>
+    </div>
+    <div class="fld">
+      <label for="sDate" data-i18n="lblDate">날짜</label>
+      <div class="line"><input id="sDate" type="range" min="0" max="364" step="1" value="0"><div class="val" id="vDate">—</div></div>
+      <div class="chips" id="chipsDate"></div>
+    </div>
+    <div class="fld">
+      <label for="sTime" data-i18n="lblTime">현지 태양시</label>
+      <div class="line"><button id="btnPlay" class="play" type="button">⏸</button><input id="sTime" type="range" min="0" max="24" step="0.01" value="12"><div class="val" id="vTime">—</div></div>
+    </div>
+    <p class="tnote" data-i18n="timeNote">시각은 ‘현지 태양시’입니다. 정오는 태양이 가장 높이 뜬 순간이며, 시계 시각·서머타임·균시차는 반영하지 않습니다.</p>
+  </section>
+
+  <main class="stage">
+    <section>
+      <div class="mapBox"><canvas id="map" role="img" aria-label="지도"></canvas></div>
+      <div class="legend">
+        <span><i class="sw" style="border-color:#ffa24a"></i><b data-i18n="lgFlat">평면: 빛이 닿는 범위</b></span>
+        <span><i class="sw" style="border-color:#8fdcff"></i><b data-i18n="lgGlobe">지구본: 낮과 밤의 경계</b></span>
+        <span><i class="dot" style="background:#ffd23d"></i><span data-i18n="lgSun">태양 바로 밑</span></span>
+        <span><i class="dot" style="background:#6c7692"></i><span data-i18n="lgAgree">두 모델이 일치</span></span>
+        <span><i class="dot" style="background:#ff5a6e"></i><span data-i18n="lgDiff">두 모델이 다름</span></span>
+      </div>
+      <p class="note" data-i18n="mapNote">북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다.</p>
+    </section>
+
+    <section class="card panel" aria-live="polite">
+      <h2 id="tblTitle" data-i18n="tblTitle">선택한 순간의 비교</h2>
+      <table>
+        <thead><tr><th></th><th class="g" data-i18n="thGlobe">지구본</th><th class="f" data-i18n="thFlat">평면</th></tr></thead>
+        <tbody>
+          <tr><th scope="row" data-i18n="rElev">태양 고도</th><td id="gElev">—</td><td id="fElev">—</td></tr>
+          <tr><th scope="row" data-i18n="rDN">낮·밤</th><td id="gDN">—</td><td id="fDN">—</td></tr>
+          <tr><th scope="row" data-i18n="rLen">낮의 길이</th><td id="gLen">—</td><td id="fLen">—</td></tr>
+          <tr><th scope="row" data-i18n="rRise">해 뜸~해 짐</th><td id="gRise">—</td><td id="fRise">—</td></tr>
+          <tr><th scope="row" data-i18n="rDist">태양 바로 밑까지</th><td id="gDist">—</td><td id="fDist">—</td></tr>
+        </tbody>
+      </table>
+      <div class="agree" id="agree">—</div>
+      <p class="sub" data-i18n="modelNote">지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.</p>
+    </section>
+  </main>
+
+  <section class="charts">
+    <div class="card chart">
+      <h2 data-i18n="c1Title">하루 동안의 태양 고도</h2>
+      <div class="cbox"><canvas id="c1" role="img"></canvas></div>
+      <div class="clg"><span><i class="sw" style="border-color:#8fdcff"></i><span data-i18n="thGlobe">지구본</span></span><span><i class="sw" style="border-color:#ffa24a"></i><span data-i18n="thFlat">평면</span></span><span data-i18n="c1Hint">옅은 선은 평면 모델에서 빛이 닿지 않는 구간</span></div>
+    </div>
+    <div class="card chart">
+      <h2 data-i18n="c2Title">일 년 동안의 낮의 길이</h2>
+      <div class="cbox"><canvas id="c2" role="img"></canvas></div>
+      <div class="clg"><span><i class="sw" style="border-color:#8fdcff"></i><span data-i18n="thGlobe">지구본</span></span><span><i class="sw" style="border-color:#ffa24a"></i><span data-i18n="thFlat">평면</span></span></div>
+    </div>
+  </section>
+
+  <article class="explain">
+    <h2 data-i18n="exTitle">이 비교는 무엇을 보여 주나요?</h2>
+    <p data-i18n="ex1">같은 날짜와 시각이라도 두 모델은 서로 다른 계산을 합니다. 지구본 모델은 태양 적위와 시간각으로 고도를 구하고, 낮과 밤의 경계를 태양 바로 밑 지점에서 90° 떨어진 큰 원으로 그립니다.</p>
+    <p data-i18n="ex2">평면 모델은 북극 중심 지도 위에서 태양이 지면 위 5,000km에 떠 있고 빛이 태양 바로 밑에서 11,300km까지 닿는다고 가정합니다. 이 범위 값은 원본 평면 시뮬레이터가 204개 도시의 실제 낮·밤과 잘 맞도록 고른 근사값입니다.</p>
+    <p data-i18n="ex3">두 모델의 결과가 가장 크게 갈리는 곳은 남반구와 극지방입니다. 선택한 도시의 해 뜸·해 짐 시각을 실제 기록과 견주어 보고, 어느 쪽 계산이 맞는지 직접 확인해 보세요.</p>
+    <div class="card more"><a id="lnkGlobe" href="globe-sun-path.html" data-i18n="moreGlobe">지구본 3D 태양 시뮬레이터 열기</a><a id="lnkFlat" href="flat-sun-path.html" data-i18n="moreFlat">평면 모델 3D 태양 시뮬레이터 열기</a></div>
+  </article>
+
+  <footer class="foot">
+    <a href="privacy.html" data-i18n="privacy">개인정보처리방침</a>
+    <span>© 2026 Woony.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+'use strict';
+var D2R = Math.PI / 180, TAU = Math.PI * 2;
+
+/* ================= 도시 데이터 (지구본 시뮬레이터 원본의 읽기 전용 사본): [id, 한글, 영문, 위도, 경도, 권역] ================= */
+var CITIES = [["seoul","서울","Seoul",37.5,127,"kr"],["busan","부산","Busan",35.18,129.08,"kr"],["incheon","인천","Incheon",37.46,126.71,"kr"],["daegu","대구","Daegu",35.87,128.6,"kr"],["daejeon","대전","Daejeon",36.35,127.38,"kr"],["gwangju","광주","Gwangju",35.16,126.85,"kr"],["ulsan","울산","Ulsan",35.54,129.31,"kr"],["jeju","제주","Jeju",33.5,126.53,"kr"],["gangneung","강릉","Gangneung",37.75,128.88,"kr"],["chuncheon","춘천","Chuncheon",37.88,127.73,"kr"],["jeonju","전주","Jeonju",35.82,127.15,"kr"],["cheongju","청주","Cheongju",36.64,127.49,"kr"],["pohang","포항","Pohang",36.02,129.37,"kr"],["pyongyang","평양","Pyongyang",39.04,125.76,"as"],["tokyo","도쿄","Tokyo",35.68,139.69,"as"],["osaka","오사카","Osaka",34.69,135.5,"as"],["nagoya","나고야","Nagoya",35.18,136.91,"as"],["sapporo","삿포로","Sapporo",43.06,141.35,"as"],["fukuoka","후쿠오카","Fukuoka",33.59,130.4,"as"],["naha","나하","Naha",26.21,127.68,"as"],["beijing","베이징","Beijing",39.9,116.41,"as"],["shanghai","상하이","Shanghai",31.23,121.47,"as"],["guangzhou","광저우","Guangzhou",23.13,113.26,"as"],["shenzhen","선전","Shenzhen",22.54,114.06,"as"],["chengdu","청두","Chengdu",30.57,104.07,"as"],["chongqing","충칭","Chongqing",29.56,106.55,"as"],["xian","시안","Xi’an",34.34,108.94,"as"],["harbin","하얼빈","Harbin",45.8,126.53,"as"],["wuhan","우한","Wuhan",30.59,114.31,"as"],["urumqi","우루무치","Urumqi",43.83,87.62,"as"],["lhasa","라싸","Lhasa",29.65,91.14,"as"],["hongkong","홍콩","Hong Kong",22.32,114.17,"as"],["taipei","타이베이","Taipei",25.03,121.57,"as"],["ulaanbaatar","울란바토르","Ulaanbaatar",47.89,106.91,"as"],["hanoi","하노이","Hanoi",21.03,105.85,"as"],["hochiminh","호찌민","Ho Chi Minh City",10.82,106.63,"as"],["danang","다낭","Da Nang",16.05,108.2,"as"],["bangkok","방콕","Bangkok",13.76,100.5,"as"],["chiangmai","치앙마이","Chiang Mai",18.79,98.98,"as"],["phnompenh","프놈펜","Phnom Penh",11.56,104.93,"as"],["vientiane","비엔티안","Vientiane",17.97,102.63,"as"],["yangon","양곤","Yangon",16.87,96.2,"as"],["kualalumpur","쿠알라룸푸르","Kuala Lumpur",3.14,101.69,"as"],["singapore","싱가포르","Singapore",1.35,103.82,"as"],["jakarta","자카르타","Jakarta",-6.21,106.85,"as"],["denpasar","덴파사르(발리)","Denpasar (Bali)",-8.65,115.22,"as"],["manila","마닐라","Manila",14.6,120.98,"as"],["cebu","세부","Cebu",10.32,123.89,"as"],["delhi","델리","Delhi",28.61,77.21,"as"],["mumbai","뭄바이","Mumbai",19.08,72.88,"as"],["kolkata","콜카타","Kolkata",22.57,88.36,"as"],["bengaluru","벵갈루루","Bengaluru",12.97,77.59,"as"],["chennai","첸나이","Chennai",13.08,80.27,"as"],["dhaka","다카","Dhaka",23.81,90.41,"as"],["kathmandu","카트만두","Kathmandu",27.72,85.32,"as"],["colombo","콜롬보","Colombo",6.93,79.86,"as"],["male","말레","Malé",4.18,73.51,"as"],["karachi","카라치","Karachi",24.86,67.01,"as"],["lahore","라호르","Lahore",31.55,74.34,"as"],["islamabad","이슬라마바드","Islamabad",33.68,73.05,"as"],["kabul","카불","Kabul",34.53,69.17,"as"],["tashkent","타슈켄트","Tashkent",41.3,69.24,"as"],["almaty","알마티","Almaty",43.24,76.89,"as"],["dubai","두바이","Dubai",25.2,55.27,"me"],["abudhabi","아부다비","Abu Dhabi",24.45,54.38,"me"],["doha","도하","Doha",25.29,51.53,"me"],["riyadh","리야드","Riyadh",24.71,46.68,"me"],["jeddah","제다","Jeddah",21.49,39.19,"me"],["kuwaitcity","쿠웨이트시티","Kuwait City",29.38,47.99,"me"],["muscat","무스카트","Muscat",23.59,58.41,"me"],["baghdad","바그다드","Baghdad",33.31,44.37,"me"],["tehran","테헤란","Tehran",35.69,51.39,"me"],["telaviv","텔아비브","Tel Aviv",32.09,34.78,"me"],["jerusalem","예루살렘","Jerusalem",31.77,35.21,"me"],["amman","암만","Amman",31.95,35.93,"me"],["beirut","베이루트","Beirut",33.89,35.5,"me"],["istanbul","이스탄불","Istanbul",41.01,28.98,"me"],["ankara","앙카라","Ankara",39.93,32.86,"me"],["baku","바쿠","Baku",40.41,49.87,"me"],["tbilisi","트빌리시","Tbilisi",41.72,44.79,"me"],["yerevan","예레반","Yerevan",40.18,44.51,"me"],["london","런던","London",51.51,-0.13,"eu"],["edinburgh","에든버러","Edinburgh",55.95,-3.19,"eu"],["dublin","더블린","Dublin",53.35,-6.26,"eu"],["paris","파리","Paris",48.86,2.35,"eu"],["marseille","마르세유","Marseille",43.3,5.37,"eu"],["brussels","브뤼셀","Brussels",50.85,4.35,"eu"],["amsterdam","암스테르담","Amsterdam",52.37,4.9,"eu"],["berlin","베를린","Berlin",52.52,13.4,"eu"],["munich","뮌헨","Munich",48.14,11.58,"eu"],["frankfurt","프랑크푸르트","Frankfurt",50.11,8.68,"eu"],["hamburg","함부르크","Hamburg",53.55,9.99,"eu"],["zurich","취리히","Zurich",47.38,8.54,"eu"],["geneva","제네바","Geneva",46.2,6.14,"eu"],["vienna","빈","Vienna",48.21,16.37,"eu"],["prague","프라하","Prague",50.08,14.44,"eu"],["warsaw","바르샤바","Warsaw",52.23,21.01,"eu"],["krakow","크라쿠프","Kraków",50.06,19.94,"eu"],["budapest","부다페스트","Budapest",47.5,19.04,"eu"],["bucharest","부쿠레슈티","Bucharest",44.43,26.1,"eu"],["sofia","소피아","Sofia",42.7,23.32,"eu"],["belgrade","베오그라드","Belgrade",44.79,20.45,"eu"],["zagreb","자그레브","Zagreb",45.81,15.98,"eu"],["athens","아테네","Athens",37.98,23.73,"eu"],["rome","로마","Rome",41.9,12.5,"eu"],["milan","밀라노","Milan",45.46,9.19,"eu"],["venice","베네치아","Venice",45.44,12.32,"eu"],["madrid","마드리드","Madrid",40.42,-3.7,"eu"],["barcelona","바르셀로나","Barcelona",41.39,2.17,"eu"],["lisbon","리스본","Lisbon",38.72,-9.14,"eu"],["reykjavik","레이캬비크","Reykjavík",64.15,-21.94,"eu"],["oslo","오슬로","Oslo",59.91,10.75,"eu"],["tromso","트롬쇠","Tromsø",69.65,18.96,"eu"],["stockholm","스톡홀름","Stockholm",59.33,18.07,"eu"],["helsinki","헬싱키","Helsinki",60.17,24.94,"eu"],["copenhagen","코펜하겐","Copenhagen",55.68,12.57,"eu"],["kyiv","키이우","Kyiv",50.45,30.52,"eu"],["minsk","민스크","Minsk",53.9,27.57,"eu"],["moscow","모스크바","Moscow",55.76,37.62,"ru"],["stpetersburg","상트페테르부르크","St. Petersburg",59.93,30.34,"ru"],["novosibirsk","노보시비르스크","Novosibirsk",55.03,82.92,"ru"],["irkutsk","이르쿠츠크","Irkutsk",52.29,104.3,"ru"],["yakutsk","야쿠츠크","Yakutsk",62.03,129.73,"ru"],["vladivostok","블라디보스토크","Vladivostok",43.12,131.89,"ru"],["newyork","뉴욕","New York",40.71,-74.01,"na"],["washington","워싱턴 D.C.","Washington, D.C.",38.91,-77.04,"na"],["boston","보스턴","Boston",42.36,-71.06,"na"],["atlanta","애틀랜타","Atlanta",33.75,-84.39,"na"],["miami","마이애미","Miami",25.76,-80.19,"na"],["chicago","시카고","Chicago",41.88,-87.63,"na"],["houston","휴스턴","Houston",29.76,-95.37,"na"],["dallas","댈러스","Dallas",32.78,-96.8,"na"],["denver","덴버","Denver",39.74,-104.99,"na"],["phoenix","피닉스","Phoenix",33.45,-112.07,"na"],["losangeles","로스앤젤레스","Los Angeles",34.05,-118.24,"na"],["sanfrancisco","샌프란시스코","San Francisco",37.77,-122.42,"na"],["lasvegas","라스베이거스","Las Vegas",36.17,-115.14,"na"],["seattle","시애틀","Seattle",47.61,-122.33,"na"],["anchorage","앵커리지","Anchorage",61.22,-149.9,"na"],["honolulu","호놀룰루","Honolulu",21.31,-157.86,"na"],["toronto","토론토","Toronto",43.65,-79.38,"na"],["montreal","몬트리올","Montréal",45.5,-73.57,"na"],["vancouver","밴쿠버","Vancouver",49.28,-123.12,"na"],["calgary","캘거리","Calgary",51.05,-114.07,"na"],["nuuk","누크","Nuuk",64.18,-51.72,"na"],["mexicocity","멕시코시티","Mexico City",19.43,-99.13,"na"],["cancun","칸쿤","Cancún",21.16,-86.85,"na"],["havana","아바나","Havana",23.11,-82.37,"na"],["guatemalacity","과테말라시티","Guatemala City",14.63,-90.51,"na"],["sanjosecr","산호세(코스타리카)","San José (Costa Rica)",9.93,-84.08,"na"],["panamacity","파나마시티","Panama City",8.98,-79.52,"na"],["kingston","킹스턴","Kingston",17.97,-76.79,"na"],["santodomingo","산토도밍고","Santo Domingo",18.49,-69.93,"na"],["bogota","보고타","Bogotá",4.71,-74.07,"la"],["caracas","카라카스","Caracas",10.48,-66.9,"la"],["quito","키토","Quito",-0.18,-78.47,"la"],["lima","리마","Lima",-12.05,-77.04,"la"],["cusco","쿠스코","Cusco",-13.53,-71.97,"la"],["lapaz","라파스","La Paz",-16.5,-68.15,"la"],["manaus","마나우스","Manaus",-3.12,-60.02,"la"],["brasilia","브라질리아","Brasília",-15.79,-47.88,"la"],["riodejaneiro","리우데자네이루","Rio de Janeiro",-22.91,-43.17,"la"],["saopaulo","상파울루","São Paulo",-23.55,-46.63,"la"],["asuncion","아순시온","Asunción",-25.26,-57.58,"la"],["santiago","산티아고","Santiago",-33.45,-70.67,"la"],["buenosaires","부에노스아이레스","Buenos Aires",-34.6,-58.38,"la"],["montevideo","몬테비데오","Montevideo",-34.9,-56.16,"la"],["ushuaia","우수아이아","Ushuaia",-54.8,-68.3,"la"],["cairo","카이로","Cairo",30.04,31.24,"af"],["casablanca","카사블랑카","Casablanca",33.57,-7.59,"af"],["algiers","알제","Algiers",36.75,3.06,"af"],["tunis","튀니스","Tunis",36.81,10.18,"af"],["dakar","다카르","Dakar",14.69,-17.45,"af"],["accra","아크라","Accra",5.6,-0.19,"af"],["lagos","라고스","Lagos",6.52,3.38,"af"],["addisababa","아디스아바바","Addis Ababa",9.03,38.74,"af"],["nairobi","나이로비","Nairobi",-1.29,36.82,"af"],["daressalaam","다르에스살람","Dar es Salaam",-6.79,39.21,"af"],["kinshasa","킨샤사","Kinshasa",-4.44,15.27,"af"],["luanda","루안다","Luanda",-8.84,13.23,"af"],["harare","하라레","Harare",-17.83,31.05,"af"],["antananarivo","안타나나리보","Antananarivo",-18.88,47.51,"af"],["windhoek","빈트후크","Windhoek",-22.56,17.08,"af"],["johannesburg","요하네스버그","Johannesburg",-26.2,28.05,"af"],["capetown","케이프타운","Cape Town",-33.92,18.42,"af"],["sydney","시드니","Sydney",-33.87,151.21,"oc"],["melbourne","멜버른","Melbourne",-37.81,144.96,"oc"],["brisbane","브리즈번","Brisbane",-27.47,153.03,"oc"],["adelaide","애들레이드","Adelaide",-34.93,138.6,"oc"],["perth","퍼스","Perth",-31.95,115.86,"oc"],["darwin","다윈","Darwin",-12.46,130.84,"oc"],["hobart","호바트","Hobart",-42.88,147.33,"oc"],["auckland","오클랜드","Auckland",-36.85,174.76,"oc"],["wellington","웰링턴","Wellington",-41.29,174.78,"oc"],["christchurch","크라이스트처치","Christchurch",-43.53,172.64,"oc"],["portmoresby","포트모르즈비","Port Moresby",-9.44,147.18,"oc"],["guam","괌","Guam",13.44,144.79,"oc"],["suva","수바","Suva",-18.14,178.44,"oc"],["papeete","파페에테","Papeete",-17.54,-149.57,"oc"],["dasan","다산과학기지(스발바르)","Dasan Station (Svalbard)",78.93,11.93,"pl"],["longyearbyen","롱이어비엔","Longyearbyen",78.22,15.65,"pl"],["sejong","세종과학기지(남극)","King Sejong Station (Antarctica)",-62.22,-58.78,"pl"],["jangbogo","장보고과학기지(남극)","Jang Bogo Station (Antarctica)",-74.62,164.22,"pl"],["mcmurdo","맥머도 기지(남극)","McMurdo Station (Antarctica)",-77.85,166.67,"pl"]];
+
+/* ================= 계산 모듈: 지구본 ================= */
+var TILT = 23.44, YEAR = 365.24, EQUINOX_D = 79.5;
+function decl(d) { return TILT * Math.sin(TAU * (d - EQUINOX_D) / YEAR); }           // 두 모델 공통 태양 적위(°)
+var Globe = {
+  sinElev: function (lat, dec, H) { var p = lat * D2R, q = dec * D2R; return Math.sin(p) * Math.sin(q) + Math.cos(p) * Math.cos(q) * Math.cos(H * D2R); },
+  elev: function (lat, dec, H) { return Math.asin(Math.max(-1, Math.min(1, Globe.sinElev(lat, dec, H)))) / D2R; },
+  dayLen: function (lat, dec) {
+    var x = -Math.tan(lat * D2R) * Math.tan(dec * D2R);
+    if (x >= 1) return 0; if (x <= -1) return 24;
+    return 2 * Math.acos(x) / D2R / 15;
+  },
+  distKm: function (lat, dec, H) { return (90 - Globe.elev(lat, dec, H)) * KM; }
+};
+
+/* ================= 계산 모듈: 평면 ================= */
+var KM = 111.2, SUN_H = 5000, RANGE = 11300, DISC = 20016;
+var Flat = {
+  dist: function (lat, dec, H) {
+    var rs = (90 - dec) * KM, rc = (90 - lat) * KM;
+    return Math.sqrt(Math.max(0, rs * rs + rc * rc - 2 * rs * rc * Math.cos(H * D2R)));
+  },
+  elev: function (lat, dec, H) { return Math.atan2(SUN_H, Flat.dist(lat, dec, H)) / D2R; },
+  isDay: function (lat, dec, H) { return Flat.dist(lat, dec, H) <= RANGE; },
+  dayLen: function (lat, dec) {
+    var rs = (90 - dec) * KM, rc = (90 - lat) * KM;
+    if (rc < 1e-6) return rs <= RANGE ? 24 : 0;
+    var x = (rs * rs + rc * rc - RANGE * RANGE) / (2 * rs * rc);
+    if (x >= 1) return 0; if (x <= -1) return 24;
+    return 2 * Math.acos(x) / D2R / 15;
+  }
+};
+
+/* ================= 문구 ================= */
+var T = {
+  ko: {
+    home:'← 홈', title:'평면 모델 vs 지구본 나란히 비교', subtitle:'같은 날, 같은 시각, 같은 도시에서 두 모델이 계산한 태양',
+    pageTitle:'평면 모델 vs 지구본 나란히 비교 · 같은 날 같은 시각의 태양',
+    lblCity:'도시', lblDate:'날짜', lblTime:'현지 태양시',
+    timeNote:'시각은 ‘현지 태양시’입니다. 정오는 태양이 가장 높이 뜬 순간이며, 시계 시각·서머타임·균시차는 반영하지 않습니다.',
+    evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', evToday:'오늘',
+    lgFlat:'평면: 빛이 닿는 범위', lgGlobe:'지구본: 낮과 밤의 경계', lgSun:'태양 바로 밑', lgAgree:'두 모델이 일치', lgDiff:'두 모델이 다름',
+    mapNote:'북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다.',
+    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면',
+    rElev:'태양 고도', rDN:'낮·밤', rLen:'낮의 길이', rRise:'해 뜸~해 짐', rDist:'태양 바로 밑까지',
+    day:'낮', night:'밤', allDay:'하루 종일 낮', allNight:'하루 종일 밤', hours:'시간', never:'—',
+    modelNote:'지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.',
+    c1Title:'하루 동안의 태양 고도', c1Hint:'옅은 선은 평면 모델에서 빛이 닿지 않는 구간', c2Title:'일 년 동안의 낮의 길이',
+    agree:'이 순간 204개 도시 중 <b>{n}곳</b>({p}%)에서 두 모델의 낮·밤이 같습니다.',
+    exTitle:'이 비교는 무엇을 보여 주나요?',
+    ex1:'같은 날짜와 시각이라도 두 모델은 서로 다른 계산을 합니다. 지구본 모델은 태양 적위와 시간각으로 고도를 구하고, 낮과 밤의 경계를 태양 바로 밑 지점에서 90° 떨어진 큰 원으로 그립니다.',
+    ex2:'평면 모델은 북극 중심 지도 위에서 태양이 지면 위 5,000km에 떠 있고 빛이 태양 바로 밑에서 11,300km까지 닿는다고 가정합니다. 이 범위 값은 원본 평면 시뮬레이터가 204개 도시의 실제 낮·밤과 잘 맞도록 고른 근사값입니다.',
+    ex3:'두 모델의 결과가 가장 크게 갈리는 곳은 남반구와 극지방입니다. 선택한 도시의 해 뜸·해 짐 시각을 실제 기록과 견주어 보고, 어느 쪽 계산이 맞는지 직접 확인해 보세요.',
+    moreGlobe:'지구본 3D 태양 시뮬레이터 열기', moreFlat:'평면 모델 3D 태양 시뮬레이터 열기', privacy:'개인정보처리방침',
+    play:'▶ 재생', pause:'⏸ 일시정지', ariaMap:'평면 지도 위에 평면 모델의 빛 범위와 지구본의 낮밤 경계를 겹쳐 그린 그림',
+    ariaC1:'하루 동안의 태양 고도 그래프', ariaC2:'일 년 동안의 낮의 길이 그래프', hAxis:'시', hrAxis:'시간', elevAxis:'고도(°)',
+    mon:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], md:function (m, d) { return (m + 1) + '월 ' + d + '일'; },
+    desc:'도시와 날짜, 현지 태양시를 고르면 평면 모델과 지구본 모델이 계산한 태양 고도, 낮과 밤, 낮의 길이를 한 지도 위에 겹쳐 보여 줍니다. 204개 도시에서 두 모델이 얼마나 일치하는지도 확인하세요.'
+  },
+  en: {
+    home:'← Home', title:'Flat Model vs Globe, Side by Side', subtitle:'The Sun on the same day, at the same time, in the same city, calculated both ways',
+    pageTitle:'Flat Model vs Globe, Side by Side · The Sun on the Same Day and Time',
+    lblCity:'City', lblDate:'Date', lblTime:'Local solar time',
+    timeNote:'Time is local solar time. Noon is when the Sun is highest; clock time, daylight saving and the equation of time are not applied.',
+    evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', evToday:'Today',
+    lgFlat:'Flat: reach of the light', lgGlobe:'Globe: day/night boundary', lgSun:'Point under the Sun', lgAgree:'Models agree', lgDiff:'Models differ',
+    mapNote:'North-pole azimuthal equidistant map. Tap a dot to switch city.',
+    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat',
+    rElev:'Sun elevation', rDN:'Day / night', rLen:'Day length', rRise:'Sunrise – sunset', rDist:'Distance to point under Sun',
+    day:'Day', night:'Night', allDay:'Day all day', allNight:'Night all day', hours:'h', never:'—',
+    modelNote:'The globe uses spherical astronomy; the flat model assumes a Sun 5,000 km high and light reaching 11,300 km.',
+    c1Title:'Sun elevation over one day', c1Hint:'Faded line: where the flat model has no light', c2Title:'Day length over one year',
+    agree:'At this moment, the two models give the same day/night in <b>{n}</b> of 204 cities ({p}%).',
+    exTitle:'What does this comparison show?',
+    ex1:'Even for the same date and time, the two models calculate differently. The globe model finds elevation from the Sun’s declination and hour angle, and draws the day/night boundary as a great circle 90° from the point under the Sun.',
+    ex2:'The flat model assumes, on a north-pole-centered map, a Sun 5,000 km above the surface whose light reaches 11,300 km from the point under it. That range is the approximation the original flat simulator picked to fit the real day and night in 204 cities.',
+    ex3:'The two results differ most in the southern hemisphere and near the poles. Compare the sunrise and sunset times for the selected city with real records to see which calculation fits.',
+    moreGlobe:'Open the 3D globe Sun simulator', moreFlat:'Open the 3D flat model Sun simulator', privacy:'Privacy Policy',
+    play:'▶ Play', pause:'⏸ Pause', ariaMap:'Map overlaying the flat model’s light range and the globe’s day/night boundary',
+    ariaC1:'Chart of Sun elevation over one day', ariaC2:'Chart of day length over one year', hAxis:'h', hrAxis:'h', elevAxis:'Elevation (°)',
+    mon:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], md:function (m, d) { return T.en.mon[m] + ' ' + d; },
+    desc:'Pick a city, date and local solar time to see the Sun’s elevation, day and night, and day length from the flat model and the globe model overlaid on one map, and how often they agree across 204 cities.'
+  }
+};
+
+/* ================= 상태 ================= */
+var state = { lang: 'ko', city: 0, d: 171, h: 9, playing: true, dirty: true };
+var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduced) state.playing = false;
+var $ = function (id) { return document.getElementById(id); };
+function tr() { return T[state.lang]; }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function detectLang() {
+  var q = /[?&]lang=(ko|en)\b/.exec(location.search); if (q) return q[1];
+  var s = lsGet('fe.compare.lang') || lsGet('fe.hub.lang'); if (s === 'ko' || s === 'en') return s;
+  var nl = (navigator.languages && navigator.languages[0]) || navigator.language || 'ko';
+  return /^ko/i.test(nl) ? 'ko' : 'en';
+}
+function cname(c) { return state.lang === 'en' ? c[2] : c[1]; }
+function dateStr(d) { var t = new Date(Date.UTC(2026, 0, 1) + Math.floor(d) * 864e5); return tr().md(t.getUTCMonth(), t.getUTCDate()); }
+function hm(h) { h = ((h % 24) + 24) % 24; var m = Math.round(h * 60); if (m >= 1440) m -= 1440; return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+function km(x) { return Math.round(x).toLocaleString(state.lang === 'en' ? 'en-US' : 'ko-KR') + ' km'; }
+
+/* ================= 계산 묶음 ================= */
+function subLonOf() { var c = CITIES[state.city]; return c[4] - (state.h - 12) * 15; }
+function wrap180(x) { return ((x + 180) % 360 + 360) % 360 - 180; }
+function snapshot() {
+  var c = CITIES[state.city], dec = decl(state.d), H = (state.h - 12) * 15, lat = c[3];
+  var gE = Globe.elev(lat, dec, H), fD = Flat.dist(lat, dec, H), fE = Flat.elev(lat, dec, H);
+  var gl = Globe.dayLen(lat, dec), fl = Flat.dayLen(lat, dec);
+  var sl = subLonOf(), agree = 0;
+  for (var i = 0; i < CITIES.length; i++) {
+    var Hi = wrap180(CITIES[i][4] - sl);
+    var gd = Globe.sinElev(CITIES[i][3], dec, Hi) > 0, fd = Flat.isDay(CITIES[i][3], dec, Hi);
+    if (gd === fd) agree++;
+  }
+  return { dec: dec, H: H, gElev: gE, fElev: fE, gDay: gE > 0, fDay: fD <= RANGE, gLen: gl, fLen: fl,
+           gDist: Globe.distKm(lat, dec, H), fDist: fD, agree: agree, subLon: sl };
+}
+function dayText(on) { return on ? tr().day : tr().night; }
+function lenText(h) { if (h >= 24) return tr().allDay; if (h <= 0) return tr().allNight; return f1(h) + tr().hours; }
+function riseText(h) { if (h >= 24 || h <= 0) return tr().never; return hm(12 - h / 2) + '~' + hm(12 + h / 2); }
+
+/* ================= 지도 ================= */
+var mapC = $('map'), mctx = mapC.getContext('2d'), geo = { cx: 0, cy: 0, R: 0, w: 0 };
+function sizeCanvas(cv, ctx) {
+  var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2.5), w = Math.max(10, Math.round(r.width)), h = Math.max(10, Math.round(r.height));
+  if (cv._w !== w || cv._h !== h || cv._dpr !== dpr) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv._w = w; cv._h = h; cv._dpr = dpr; }
+  ctx.setTransform(cv.width / w, 0, 0, cv.height / h, 0, 0);
+  return { w: w, h: h };
+}
+function mp(lat, lon) { var r = (90 - lat) * KM * geo.k, l = lon * D2R; return [geo.cx + r * Math.sin(l), geo.cy + r * Math.cos(l)]; }
+function drawMap(s) {
+  var sz = sizeCanvas(mapC, mctx), W = sz.w, ctx = mctx;
+  geo.cx = W / 2; geo.cy = W / 2; geo.R = W / 2 - 16; geo.k = geo.R / DISC;
+  ctx.clearRect(0, 0, W, W);
+  ctx.fillStyle = '#080b13'; ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.clip();
+  /* 평면 모델: 빛이 닿는 범위 */
+  var sp = mp(s.dec, s.subLon), rr = RANGE * geo.k;
+  ctx.fillStyle = 'rgba(255,162,74,.13)'; ctx.beginPath(); ctx.arc(sp[0], sp[1], rr, 0, TAU); ctx.fill();
+  /* 위도·경도선 */
+  ctx.strokeStyle = '#1e2536'; ctx.lineWidth = 1;
+  for (var la = 60; la >= -60; la -= 30) { ctx.beginPath(); ctx.arc(geo.cx, geo.cy, (90 - la) * KM * geo.k, 0, TAU); ctx.stroke(); }
+  for (var lo = 0; lo < 360; lo += 30) { var a = mp(-90, lo); ctx.beginPath(); ctx.moveTo(geo.cx, geo.cy); ctx.lineTo(a[0], a[1]); ctx.stroke(); }
+  ctx.strokeStyle = '#ffa24a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sp[0], sp[1], rr, 0, TAU); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = '#3a4258'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(geo.cx, geo.cy, geo.R, 0, TAU); ctx.stroke();
+  /* 지구본: 낮과 밤의 경계 = 태양 바로 밑에서 90° 떨어진 큰 원 */
+  var dl = s.dec * D2R, sl = s.subLon * D2R;
+  var sv = [Math.cos(dl) * Math.cos(sl), Math.cos(dl) * Math.sin(sl), Math.sin(dl)];
+  var u = [-Math.sin(sl), Math.cos(sl), 0];
+  var v = [sv[1] * u[2] - sv[2] * u[1], sv[2] * u[0] - sv[0] * u[2], sv[0] * u[1] - sv[1] * u[0]];
+  ctx.strokeStyle = '#8fdcff'; ctx.lineWidth = 2.2; ctx.beginPath();
+  for (var i = 0; i <= 360; i++) {
+    var t = i * D2R, px = u[0] * Math.cos(t) + v[0] * Math.sin(t), py = u[1] * Math.cos(t) + v[1] * Math.sin(t), pz = u[2] * Math.cos(t) + v[2] * Math.sin(t);
+    var p = mp(Math.asin(Math.max(-1, Math.min(1, pz))) / D2R, Math.atan2(py, px) / D2R);
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke();
+  /* 도시 */
+  geo.pts = [];
+  for (var k = 0; k < CITIES.length; k++) {
+    var c = CITIES[k], Hi = wrap180(c[4] - s.subLon), q = mp(c[3], c[4]);
+    var same = (Globe.sinElev(c[3], s.dec, Hi) > 0) === Flat.isDay(c[3], s.dec, Hi);
+    geo.pts.push(q);
+    ctx.fillStyle = same ? '#6c7692' : '#ff5a6e';
+    ctx.beginPath(); ctx.arc(q[0], q[1], same ? 2.4 : 3.4, 0, TAU); ctx.fill();
+  }
+  var sc = CITIES[state.city], cq = mp(sc[3], sc[4]);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cq[0], cq[1], 8, 0, TAU); ctx.stroke();
+  /* 태양 바로 밑 */
+  ctx.fillStyle = '#ffd23d'; ctx.beginPath(); ctx.arc(sp[0], sp[1], 6, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#05060a'; ctx.lineWidth = 1.5; ctx.stroke();
+  /* 방위 글자 */
+  ctx.fillStyle = '#8b93a7'; ctx.font = '11.5px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('N', geo.cx, geo.cy - 10);
+  var lab = [['0°', 0], ['90°E', 90], ['180°', 180], ['90°W', 270]];
+  lab.forEach(function (e) { var l = e[1] * D2R, rx = geo.cx + (geo.R + 9) * Math.sin(l), ry = geo.cy + (geo.R + 8) * Math.cos(l); ctx.fillText(e[0], rx, ry); });
+  /* 선택 도시 이름 */
+  ctx.textAlign = cq[0] > W * 0.6 ? 'right' : 'left'; ctx.fillStyle = '#fff'; ctx.font = '600 12.5px system-ui,sans-serif';
+  ctx.fillText(cname(sc), cq[0] + (cq[0] > W * 0.6 ? -12 : 12), cq[1] - 12);
+}
+
+/* ================= 그래프 ================= */
+function chart(cv, o) {
+  var ctx = cv.getContext('2d'), sz = sizeCanvas(cv, ctx), W = sz.w, H = sz.h;
+  var L = 38, Rm = 10, Tp = 10, B = 24, pw = W - L - Rm, ph = H - Tp - B;
+  ctx.clearRect(0, 0, W, H);
+  var X = function (x) { return L + (x - o.x0) / (o.x1 - o.x0) * pw; }, Y = function (y) { return Tp + (1 - (y - o.y0) / (o.y1 - o.y0)) * ph; };
+  ctx.font = '11px system-ui,sans-serif'; ctx.fillStyle = '#8b93a7'; ctx.strokeStyle = '#1e2536'; ctx.lineWidth = 1; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  o.yt.forEach(function (y) { ctx.beginPath(); ctx.moveTo(L, Y(y)); ctx.lineTo(W - Rm, Y(y)); ctx.stroke(); ctx.fillText(String(y), L - 5, Y(y)); });
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  o.xt.forEach(function (t) { ctx.fillText(t[1], X(t[0]), H - B + 6); });
+  if (o.y0 < 0) { ctx.strokeStyle = '#3a4258'; ctx.beginPath(); ctx.moveTo(L, Y(0)); ctx.lineTo(W - Rm, Y(0)); ctx.stroke(); }
+  o.series.forEach(function (s) {
+    ctx.lineWidth = 2.2; ctx.strokeStyle = s.color;
+    for (var i = 1; i < s.pts.length; i++) {
+      var a = s.pts[i - 1], b = s.pts[i];
+      ctx.globalAlpha = (a[2] === false && b[2] === false) ? 0.3 : 1;
+      ctx.beginPath(); ctx.moveTo(X(a[0]), Y(a[1])); ctx.lineTo(X(b[0]), Y(b[1])); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  });
+  var mx = X(o.mark); ctx.strokeStyle = '#ffffff88'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(mx, Tp); ctx.lineTo(mx, Tp + ph); ctx.stroke(); ctx.setLineDash([]);
+  o.series.forEach(function (s) { var y = s.at; ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(mx, Y(y), 4, 0, TAU); ctx.fill(); });
+  ctx.fillStyle = '#8b93a7'; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(o.yl, L + 4, Tp + 2);
+}
+function drawCharts(s) {
+  var c = CITIES[state.city], lat = c[3], dec = s.dec, g = [], f = [], i;
+  for (i = 0; i <= 96; i++) {
+    var h = i * 0.25, H = (h - 12) * 15;
+    g.push([h, Globe.elev(lat, dec, H)]);
+    f.push([h, Flat.elev(lat, dec, H), Flat.dist(lat, dec, H) <= RANGE]);
+  }
+  chart($('c1'), { x0: 0, x1: 24, y0: -90, y1: 90, yt: [-90, -45, 0, 45, 90], xt: [[0, '0'], [6, '6'], [12, '12'], [18, '18'], [24, '24']], yl: tr().elevAxis,
+    mark: state.h, series: [{ color: '#8fdcff', pts: g, at: s.gElev }, { color: '#ffa24a', pts: f, at: s.fElev }] });
+  var gy = [], fy = [];
+  for (i = 0; i <= 364; i++) { var dd = decl(i); gy.push([i, Globe.dayLen(lat, dd)]); fy.push([i, Flat.dayLen(lat, dd)]); }
+  var xt = [], mo = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+  [0, 2, 4, 6, 8, 10].forEach(function (m) { xt.push([mo[m] + 14, tr().mon[m]]); });
+  chart($('c2'), { x0: 0, x1: 364, y0: 0, y1: 24, yt: [0, 6, 12, 18, 24], xt: xt, yl: tr().hrAxis,
+    mark: state.d, series: [{ color: '#8fdcff', pts: gy, at: Globe.dayLen(lat, dec) }, { color: '#ffa24a', pts: fy, at: Flat.dayLen(lat, dec) }] });
+}
+
+/* ================= 표·화면 갱신 ================= */
+var lastKey = '';
+function render() {
+  var s = snapshot(), t = tr();
+  $('vDate').textContent = dateStr(state.d); $('vTime').textContent = hm(state.h);
+  $('sDate').value = state.d; $('sTime').value = state.h;
+  $('gElev').textContent = f1(s.gElev) + '°'; $('fElev').textContent = f1(s.fElev) + '°';
+  $('gDN').innerHTML = '<b>' + dayText(s.gDay) + '</b>'; $('fDN').innerHTML = '<b>' + dayText(s.fDay) + '</b>';
+  $('gLen').textContent = lenText(s.gLen); $('fLen').textContent = lenText(s.fLen);
+  $('gRise').textContent = riseText(s.gLen); $('fRise').textContent = riseText(s.fLen);
+  $('gDist').textContent = km(s.gDist); $('fDist').textContent = km(s.fDist);
+  var n = s.agree, p = Math.round(n / CITIES.length * 100);
+  $('agree').innerHTML = t.agree.replace('{n}', n).replace('{p}', p);
+  $('tblTitle').textContent = t.tblTitle + ' · ' + cname(CITIES[state.city]) + ' · ' + dateStr(state.d) + ' ' + hm(state.h);
+  drawMap(s); drawCharts(s);
+  window.__CMP = { s: s, state: state };
+}
+
+/* ================= 언어·초기화 ================= */
+function applyLang() {
+  var t = tr();
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t[el.getAttribute('data-i18n')]; if (typeof v === 'string') el.textContent = v; });
+  document.title = t.pageTitle;
+  var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', t.desc);
+  $('btnLang').textContent = state.lang === 'ko' ? 'EN' : '한국어';
+  $('home').setAttribute('href', state.lang === 'en' ? 'en/?lang=en' : './?lang=ko');
+  $('map').setAttribute('aria-label', t.ariaMap); $('c1').setAttribute('aria-label', t.ariaC1); $('c2').setAttribute('aria-label', t.ariaC2);
+  var sel = $('selCity'); sel.innerHTML = '';
+  var idx = CITIES.map(function (c, i) { return i; });
+  idx.sort(function (a, b) { return cname(CITIES[a]).localeCompare(cname(CITIES[b]), state.lang); });
+  idx.forEach(function (i) { var o = document.createElement('option'); o.value = i; o.textContent = cname(CITIES[i]); sel.appendChild(o); });
+  sel.value = state.city;
+  buildChips(); setPlayLabel(); render();
+}
+function setPlayLabel() { $('btnPlay').textContent = state.playing ? tr().pause : tr().play; }
+function todayD() { var n = new Date(); return Math.min(364, Math.floor((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(n.getFullYear(), 0, 1)) / 864e5)); }
+function buildChips() {
+  var box = $('chipsDate'); box.innerHTML = '';
+  [['evSpring', 79], ['evSummer', 171], ['evAutumn', 265], ['evWinter', 355], ['evToday', todayD()]].forEach(function (e) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = tr()[e[0]];
+    b.addEventListener('click', function () { state.d = e[1]; render(); }); box.appendChild(b);
+  });
+}
+function init() {
+  state.lang = detectLang();
+  var sd = CITIES.findIndex(function (c) { return c[0] === 'seoul'; }); state.city = sd < 0 ? 0 : sd;
+  $('selCity').addEventListener('change', function (e) { state.city = +e.target.value; render(); });
+  $('sDate').addEventListener('input', function (e) { state.d = +e.target.value; render(); });
+  $('sTime').addEventListener('input', function (e) { state.h = +e.target.value; render(); });
+  $('btnPlay').addEventListener('click', function () { state.playing = !state.playing; setPlayLabel(); });
+  $('btnLang').addEventListener('click', function () { state.lang = state.lang === 'ko' ? 'en' : 'ko'; lsSet('fe.compare.lang', state.lang); applyLang(); });
+  mapC.addEventListener('click', function (e) {
+    var r = mapC.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, best = -1, bd = 18 * 18;
+    (geo.pts || []).forEach(function (p, i) { var d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y); if (d < bd) { bd = d; best = i; } });
+    if (best >= 0) { state.city = best; $('selCity').value = best; render(); }
+  });
+  var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(render, 60); });
+  applyLang();
+  var last = 0;
+  function tick(ts) {
+    if (state.playing && !document.hidden) { var dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; state.h = (state.h + dt * 1.5) % 24; render(); }
+    last = ts; requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+window.__CMPFN = { Globe: Globe, Flat: Flat, decl: decl };
+init();
+})();
+</script>
+</body>
+</html>
