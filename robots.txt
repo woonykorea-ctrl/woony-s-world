@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://woonykorea-ctrl.github.io/woony-s-world/sitemap.xml
