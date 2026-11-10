@@ -1939,5 +1939,32 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
 })();
 
 </script>
+<!-- 홈 버튼: 시뮬레이터 모음 홈으로 돌아가기 (제목 줄 오른쪽 끝에 자동 배치) -->
+<a id="homeBtn" href="./?lang=ko">← 홈</a>
+<style>
+#homeBtn{position:fixed;left:20px;top:11px;z-index:25;display:inline-flex;align-items:center;height:26px;padding:0 11px;
+  font:600 12px/1 var(--font,system-ui,sans-serif);color:#e8ebf2;text-decoration:none;white-space:nowrap;background:rgba(15,18,26,.88);
+  border:1px solid #262c3b;border-radius:999px;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
+#homeBtn::after{content:"";position:absolute;inset:-9px -6px}
+#homeBtn:hover{border-color:#8b93a7}
+#homeBtn:focus-visible{outline:2px solid #8fdcff;outline-offset:2px}
+</style>
+<script>
+(function(){var a=document.getElementById('homeBtn');if(!a)return;
+var full='';
+function place(){var h=document.querySelector('#title h1');if(!h)return;
+a.textContent=full;
+var r=document.createRange();r.selectNodeContents(h);var q=r.getBoundingClientRect();
+a.style.left=Math.round(q.right+12)+'px';a.style.top=Math.round(q.top+q.height/2-13)+'px';
+if(q.right+12+a.offsetWidth>window.innerWidth-8)a.textContent='\u2190';}
+function u(){var en=/^en/i.test(document.documentElement.lang);
+full=en?'\u2190 Home':'\u2190 \ud648';
+a.href=en?'en/?lang=en':'./?lang=ko';
+a.setAttribute('aria-label',en?"Back to Woony's Science Simulators home":'\uc6b0\ub2c8\uc758 \uacfc\ud559 \uc2dc\ubbac\ub808\uc774\ud130 \ud648\uc73c\ub85c');place();}
+u();window.addEventListener('resize',place);window.addEventListener('load',place);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(place);
+new MutationObserver(u).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+var t=document.getElementById('title');if(t&&window.MutationObserver)new MutationObserver(place).observe(t,{childList:true,subtree:true,characterData:true});})();
+</script>
 </body>
 </html>
