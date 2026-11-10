@@ -482,9 +482,11 @@ function drawGlobe(s) {
   gctx.imageSmoothingEnabled = true; gctx.drawImage(gOff, P, P, W - 2 * P, W - 2 * P);
   gctx.strokeStyle = '#3a4258'; gctx.lineWidth = 1.2; gctx.beginPath(); gctx.arc(W / 2, W / 2, R, 0, TAU); gctx.stroke();
   if (sv[0] * cv[0] + sv[1] * cv[1] + sv[2] * cv[2] > -0.001) {
-    var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2], gx = W / 2 + sx * R * (sunView ? 0.97 : 1), gy = W / 2 - sy * R * (sunView ? 0.97 : 1);
+    var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2], sm = Math.sqrt(sx * sx + sy * sy) || 1;
+    var gx = W / 2 + sx / sm * (R + 17), gy = W / 2 - sy / sm * (R + 17);        /* 태양은 지구 밖, 태양 방향에 둔다 */
+    gctx.strokeStyle = '#ffd23d88'; gctx.lineWidth = 1.5; gctx.setLineDash([3, 3]); gctx.beginPath(); gctx.moveTo(W / 2 + sx / sm * R, W / 2 - sy / sm * R); gctx.lineTo(gx, gy); gctx.stroke(); gctx.setLineDash([]);
     gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(gx, gy, 6.5, 0, TAU); gctx.fill(); gctx.strokeStyle = '#05060a'; gctx.lineWidth = 1.2; gctx.stroke();
-    if (sunView) { gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'right'; gctx.textBaseline = 'middle'; gctx.fillText('\u2600 ' + tr().sunWord, gx - 12, gy); }
+    if (sunView) { gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'top'; gctx.fillText(tr().sunWord, gx, gy + 11); }
   }
   /* 지축(분홍)과 공전면에 수직인 선(점선): 둘 사이 각이 지축 기울기 */
   function axisLine(vec, color, dash, label) {
