@@ -56,6 +56,10 @@ input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
 .stage{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
 .mapBox{position:relative;width:min(100%,600px);aspect-ratio:1/1;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#05060a}
 .mapBox canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+.seg{display:inline-flex;justify-self:start;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{background:none;border:0;padding:6px 12px;font-size:13px;color:var(--dim);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#ffa24a26;color:var(--hot);font-weight:700}
 .gBox{width:min(100%,320px);aspect-ratio:1/1;margin:2px auto 0}
 .gBox canvas{display:block;width:100%;height:100%}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:12.5px;color:var(--dim)}
@@ -165,8 +169,9 @@ td b{font-weight:600}
       <div class="agree" id="agree">—</div>
       <p class="sub" data-i18n="modelNote">지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.</p>
       <h2 data-i18n="gTitle">지구본으로 본 모습</h2>
+      <div class="seg" role="group" aria-label="view"><button id="vwSun" type="button" aria-pressed="true" data-i18n="vwSun">태양 기준</button><button id="vwCity" type="button" aria-pressed="false" data-i18n="vwCity">도시 기준</button></div>
       <div class="gBox"><canvas id="gl" role="img"></canvas></div>
-      <p class="sub" data-i18n="gNote">선택한 도시를 가운데 두고 본 지구입니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.</p>
+      <p class="sub" id="gNote"></p>
     </section>
   </main>
 
@@ -267,7 +272,7 @@ var T = {
     evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', evToday:'오늘',
     lgFlat:'평면: 빛이 닿는 범위', lgGlobe:'지구본: 낮과 밤의 경계', lgSun:'태양 바로 밑', lgAgree:'두 모델이 일치', lgDiff:'두 모델이 다름',
     mapNote:'북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다. 해안선은 Natural Earth 110m 공개 데이터입니다.',
-    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', gNote:'선택한 도시를 가운데 두고 본 지구입니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
+    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', vwSun:'태양 기준', vwCity:'도시 기준', sunWord:'태양', gNoteSun:'태양은 오른쪽에 고정돼 있고 지구가 자전합니다. 흰 원이 선택한 도시이며 뒷면에 있으면 보이지 않습니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.', gNoteCity:'선택한 도시를 가운데 고정해 본 시점입니다. 대륙은 그대로이고 태양과 낮·밤 경계가 움직입니다. 푸른 쪽이 낮, 어두운 쪽이 밤입니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
     rElev:'태양 고도', rDN:'낮·밤', rLen:'낮의 길이', rRise:'해 뜸~해 짐', rDist:'태양 바로 밑까지',
     day:'낮', night:'밤', allDay:'하루 종일 낮', allNight:'하루 종일 밤', hours:'시간', never:'—',
     modelNote:'지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.',
@@ -291,7 +296,7 @@ var T = {
     evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', evToday:'Today',
     lgFlat:'Flat: reach of the light', lgGlobe:'Globe: day/night boundary', lgSun:'Point under the Sun', lgAgree:'Models agree', lgDiff:'Models differ',
     mapNote:'North-pole azimuthal equidistant map. Tap a dot to switch city. Coastlines: Natural Earth 110m, public domain.',
-    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', gNote:'Earth viewed with the selected city at the center. Blue is day, dark is night.', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
+    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', vwSun:'Sun-fixed', vwCity:'City-fixed', sunWord:'Sun', gNoteSun:'The Sun stays fixed on the right while Earth rotates. The white ring is the selected city (hidden when on the far side). Blue is day, dark is night.', gNoteCity:'View fixed on the selected city. The continents stay put while the Sun and the day/night boundary move. Blue is day, dark is night.', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
     rElev:'Sun elevation', rDN:'Day / night', rLen:'Day length', rRise:'Sunrise – sunset', rDist:'Distance to point under Sun',
     day:'Day', night:'Night', allDay:'Day all day', allNight:'Night all day', hours:'h', never:'—',
     modelNote:'The globe uses spherical astronomy; the flat model assumes a Sun 5,000 km high and light reaching 11,300 km.',
@@ -310,7 +315,7 @@ var T = {
 };
 
 /* ================= 상태 ================= */
-var state = { lang: 'ko', city: 0, d: 171, h: 9, playing: true, dirty: true };
+var state = { lang: 'ko', city: 0, d: 171, h: 9, playing: true, view: 'sun', dirty: true };
 var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (reduced) state.playing = false;
 var $ = function (id) { return document.getElementById(id); };
@@ -439,7 +444,8 @@ var glC = $('gl'), gctx = glC.getContext('2d'), gOff = document.createElement('c
 gOff.width = gOff.height = GN;
 function drawGlobe(s) {
   var sz = sizeCanvas(glC, gctx), W = sz.w, c = CITIES[state.city];
-  var ph = c[3] * D2R, la = c[4] * D2R, dl = s.dec * D2R, sl = s.subLon * D2R;
+  var dl = s.dec * D2R, sl = s.subLon * D2R, sunView = state.view === 'sun';
+  var ph = sunView ? 0 : c[3] * D2R, la = sunView ? (s.subLon - 90) * D2R : c[4] * D2R;
   var cv = [Math.cos(ph) * Math.cos(la), Math.cos(ph) * Math.sin(la), Math.sin(ph)];
   var ev = [-Math.sin(la), Math.cos(la), 0];
   var nv = [-Math.sin(ph) * Math.cos(la), -Math.sin(ph) * Math.sin(la), Math.cos(ph)];
@@ -466,12 +472,17 @@ function drawGlobe(s) {
   gctx.imageSmoothingEnabled = true; gctx.drawImage(gOff, 1, 1, W - 2, W - 2);
   gctx.strokeStyle = '#3a4258'; gctx.lineWidth = 1.2; gctx.beginPath(); gctx.arc(W / 2, W / 2, W / 2 - 1, 0, TAU); gctx.stroke();
   var R = W / 2 - 1;
-  if (sv[0] * cv[0] + sv[1] * cv[1] + sv[2] * cv[2] > 0) {
-    var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2];
-    gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(W / 2 + sx * R, W / 2 - sy * R, 5.5, 0, TAU); gctx.fill(); gctx.strokeStyle = '#05060a'; gctx.lineWidth = 1.2; gctx.stroke();
+  if (sv[0] * cv[0] + sv[1] * cv[1] + sv[2] * cv[2] > -0.001) {
+    var sx = sv[0] * ev[0] + sv[1] * ev[1] + sv[2] * ev[2], sy = sv[0] * nv[0] + sv[1] * nv[1] + sv[2] * nv[2], gx = W / 2 + sx * R * (sunView ? 0.97 : 1), gy = W / 2 - sy * R * (sunView ? 0.97 : 1);
+    gctx.fillStyle = '#ffd23d'; gctx.beginPath(); gctx.arc(gx, gy, 6.5, 0, TAU); gctx.fill(); gctx.strokeStyle = '#05060a'; gctx.lineWidth = 1.2; gctx.stroke();
+    if (sunView) { gctx.fillStyle = '#ffd23d'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'right'; gctx.textBaseline = 'middle'; gctx.fillText('\u2600 ' + tr().sunWord, gx - 12, gy); }
   }
-  gctx.strokeStyle = '#fff'; gctx.lineWidth = 2; gctx.beginPath(); gctx.arc(W / 2, W / 2, 6, 0, TAU); gctx.stroke();
-  gctx.fillStyle = '#fff'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'bottom'; gctx.fillText(cname(c), W / 2, W / 2 - 11);
+  var cc = [Math.cos(c[3] * D2R) * Math.cos(c[4] * D2R), Math.cos(c[3] * D2R) * Math.sin(c[4] * D2R), Math.sin(c[3] * D2R)];
+  if (cc[0] * cv[0] + cc[1] * cv[1] + cc[2] * cv[2] > 0.02) {
+    var cx = W / 2 + (cc[0] * ev[0] + cc[1] * ev[1] + cc[2] * ev[2]) * R, cy = W / 2 - (cc[0] * nv[0] + cc[1] * nv[1] + cc[2] * nv[2]) * R;
+    gctx.strokeStyle = '#fff'; gctx.lineWidth = 2; gctx.beginPath(); gctx.arc(cx, cy, 6, 0, TAU); gctx.stroke();
+    gctx.fillStyle = '#fff'; gctx.font = '600 12px system-ui,sans-serif'; gctx.textAlign = 'center'; gctx.textBaseline = 'bottom'; gctx.fillText(cname(c), cx, cy - 10);
+  }
 }
 
 /* ================= 그래프 ================= */
@@ -548,7 +559,11 @@ function applyLang() {
   idx.sort(function (a, b) { return cname(CITIES[a]).localeCompare(cname(CITIES[b]), state.lang); });
   idx.forEach(function (i) { var o = document.createElement('option'); o.value = i; o.textContent = cname(CITIES[i]); sel.appendChild(o); });
   sel.value = state.city;
-  buildChips(); setPlayLabel(); render();
+  buildChips(); setPlayLabel(); setView(state.view);
+}
+function setView(v) {
+  state.view = v; $('vwSun').setAttribute('aria-pressed', v === 'sun'); $('vwCity').setAttribute('aria-pressed', v === 'city');
+  $('gNote').textContent = v === 'sun' ? tr().gNoteSun : tr().gNoteCity; render();
 }
 function setPlayLabel() { $('btnPlay').textContent = state.playing ? tr().pause : tr().play; }
 function todayD() { var n = new Date(); return Math.min(364, Math.floor((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(n.getFullYear(), 0, 1)) / 864e5)); }
@@ -565,6 +580,7 @@ function init() {
   $('selCity').addEventListener('change', function (e) { state.city = +e.target.value; render(); });
   $('sDate').addEventListener('input', function (e) { state.d = +e.target.value; render(); });
   $('sTime').addEventListener('input', function (e) { state.h = +e.target.value; render(); });
+  $('vwSun').addEventListener('click', function () { setView('sun'); }); $('vwCity').addEventListener('click', function () { setView('city'); });
   $('btnPlay').addEventListener('click', function () { state.playing = !state.playing; setPlayLabel(); });
   $('btnLang').addEventListener('click', function () { state.lang = state.lang === 'ko' ? 'en' : 'ko'; lsSet('fe.compare.lang', state.lang); applyLang(); });
   mapC.addEventListener('click', function (e) {
