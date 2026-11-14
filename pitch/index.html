@@ -154,9 +154,7 @@ h2{font-size:23px;margin:10px 0}
 #btn-full:active{background:linear-gradient(180deg,#ff7a85,#e8384f 55%,#bf2540);filter:brightness(.93)}
 
 .hero{position:relative}
-.dial .pivot{r:15}
-.dial .mic rect{fill:var(--gold)}
-.dial .mic path{fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round}
+.dial .pivot{r:9}
 .notes-float{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .notes-float span{position:absolute;bottom:42%;color:var(--gold);font-size:22px;opacity:0;animation:noteUp 7s ease-in infinite}
 .notes-float span:nth-child(1){left:8%;animation-delay:0s}
@@ -172,6 +170,13 @@ h2{font-size:23px;margin:10px 0}
 #song-pick button:active{border-color:var(--gold)}
 #song-pick button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #song-pick small{font-family:var(--sans,inherit);font-size:12px;font-weight:700;color:var(--on-gold);background:var(--gold);padding:3px 10px;border-radius:999px}
+
+.title-row{display:flex;align-items:center;justify-content:center;gap:14px;margin:16px 0 10px}
+.title-row h1{margin:0;text-align:left}
+.mic-badge{flex:0 0 64px;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff7a85,#e8384f 60%,#bf2540);box-shadow:0 10px 28px -8px rgba(232,56,79,.8),inset 0 1px 0 rgba(255,255,255,.4)}
+.mic-badge svg{width:36px;height:36px}
+.mic-badge rect{fill:#fff}
+.mic-badge path{fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round}
 </style>
 </head>
 <body>
@@ -184,13 +189,15 @@ h2{font-size:23px;margin:10px 0}
     <svg class="dial" viewBox="0 0 300 184" role="img" aria-label="음정 튜너 다이얼">
       <g id="ticks"></g>
       <g class="needle-g"><line class="needle" x1="150" y1="150" x2="150" y2="46"></line></g>
-      <circle class="pivot" cx="150" cy="150" r="15"></circle>
-      <g class="mic" aria-hidden="true"><rect x="147" y="141" width="6" height="11" rx="3"></rect><path d="M143 149a7 7 0 0 0 14 0M150 156v3"></path></g>
+      <circle class="pivot" cx="150" cy="150" r="9"></circle>
       <text x="26" y="170" text-anchor="start">낮아요</text>
       <text x="150" y="180" text-anchor="middle">딱 맞아요</text>
       <text x="274" y="170" text-anchor="end">높아요</text>
     </svg>
-    <h1>나도 <span class="hot">가수</span>가<br>될 수 있을까?</h1>
+    <div class="title-row">
+      <span class="mic-badge" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="17" y="6" width="14" height="24" rx="7"></rect><path d="M10 22a14 14 0 0 0 28 0M24 36v7M17 43h14"></path></svg></span>
+      <h1>나도 <span class="hot">가수</span>가<br>될 수 있을까?</h1>
+    </div>
     <p class="sub">음치부터 가수까지 10단계, 기준음을 듣고 따라 부르면 등급을 알려 드려요.</p>
   </div>
   <button id="btn-full" class="btn primary cta">테스트 시작</button>
