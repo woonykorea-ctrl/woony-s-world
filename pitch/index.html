@@ -209,6 +209,18 @@ h2{font-size:23px;margin:10px 0}
 .beat-type{margin:10px 0 0;text-align:center;font-family:var(--serif);font-size:17px}
 .beat-type small{display:block;margin-top:2px;font-family:var(--sans);font-size:12px;color:var(--mute)}
 @media (prefers-reduced-motion:reduce){#ring.bump,#judge.show,#beat-stage.shake,.spark,.ripple,#beat-banner{animation:none}#judge.show{opacity:1}}
+
+#beat-intro{margin-top:8px}
+.demo{display:grid;place-items:center;height:230px;overflow:hidden;border-radius:24px}
+.demo-ring{position:relative;width:150px;height:150px;border:5px solid var(--gold);border-radius:50%;display:grid;place-items:center;animation:demoBump 1.6s ease-out infinite}
+.demo-ring i{position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,133,.55),rgba(232,56,79,.28) 70%,transparent);animation:demoPulse 1.6s ease-in infinite}
+.demo-ring b{position:relative;font-family:var(--serif);font-size:26px;color:var(--gold)}
+@keyframes demoPulse{0%{transform:scale(2);opacity:.4}85%,100%{transform:scale(1);opacity:1}}
+@keyframes demoBump{0%,84%{box-shadow:0 0 0 0 rgba(217,180,106,0)}86%{box-shadow:0 0 0 0 rgba(217,180,106,.8)}100%{box-shadow:0 0 0 30px rgba(217,180,106,0)}}
+#beat-intro-lines{list-style:none;margin:4px 0 18px;padding:0;display:flex;flex-direction:column;gap:10px}
+#beat-intro-lines li{font-size:17px;line-height:1.6;text-align:center;word-break:keep-all}
+#beat-intro .btns{display:flex;flex-direction:column;gap:10px}
+@media (prefers-reduced-motion:reduce){.demo-ring,.demo-ring i{animation:none}}
 </style>
 </head>
 <body>
@@ -303,6 +315,11 @@ h2{font-size:23px;margin:10px 0}
   </div>
   <div id="song-view" hidden>
     <div id="song-pick"></div>
+  </div>
+  <div id="beat-intro" hidden>
+    <div class="demo" aria-hidden="true"><div class="demo-ring"><i></i><b>TAP</b></div></div>
+    <ol id="beat-intro-lines"></ol>
+    <div class="btns"><button id="beat-practice" class="btn primary"></button><button id="beat-go" class="btn"></button></div>
   </div>
   <div id="beat-view" hidden>
     <div id="beat-dots"></div>
@@ -984,6 +1001,7 @@ const setMsg = (m) => { $('#test-msg').textContent = m; };
 function showView(kind) {
   $('#pitch-view').hidden = kind !== 'pitch';
   $('#song-view').hidden = kind !== 'song';
+  $('#beat-intro').hidden = kind !== 'beatintro';
   $('#beat-view').hidden = kind !== 'beat';
 }
 const LOW_MSG = '소리가 너무 작게 들려요. 마이크에 가까이 대고 조금 크게 다시 불러 주세요.';
@@ -1114,13 +1132,12 @@ async function melodyStep(idx, total, melody, base) {
 
 // ---------- 단계: 박자 ----------
 const BEAT_MS = 650;      // 박자 간격
-const BEAT_COUNT = 8;     // 앞 4번은 가이드, 뒤 4번은 가이드 없이
+const BEAT_COUNT = 8;     // 본 테스트: 앞 4번은 가이드, 뒤 4번은 가이드 없이
 const GUIDED = 4;
 const SPARKS = Array.from({ length: 10 }, (_, i) => (i / 10) * Math.PI * 2);
-async function beatStep(idx, total) {
+async function playBeats(BEAT_COUNT, GUIDED, lead) {
   showView('beat');
-  setStep(idx, total, '박자 맞추기', '동그라미가 테두리와 겹칠 때 톡! 중간에 가이드가 사라져요 👆');
-  const beats = Array.from({ length: BEAT_COUNT }, (_, i) => 1500 + i * BEAT_MS);
+  const beats = Array.from({ length: BEAT_COUNT }, (_, i) => lead + i * BEAT_MS);
   const taps = [];
   const judged = {}; // 박자 번호 → 가장 좋은 오차(절댓값)
   const ring = $('#ring'), stage = $('#beat-stage'), judge = $('#judge'), banner = $('#beat-banner');
@@ -1170,7 +1187,7 @@ async function beatStep(idx, total) {
     pulse.style.transform = `scale(${1 + 1.6 * Math.max(0, Math.min(1, remain / BEAT_MS))})`;
     gb.forEach((b, i) => { if (el >= b && !clicked.has(i)) { clicked.add(i); playClick(); restart(ring, 'bump'); } });
     // 가이드가 사라지는 순간: 큰 배너 + 링 모양 변경
-    if (!offShown && el >= beats[GUIDED - 1] + BEAT_MS * 0.45) {
+    if (BEAT_COUNT > GUIDED && !offShown && el >= beats[GUIDED - 1] + BEAT_MS * 0.45) {
       offShown = true;
       ring.classList.add('off'); $('#ring-core').textContent = '?';
       banner.textContent = '가이드 OFF! 박자를 이어가요'; banner.hidden = false;
@@ -1189,6 +1206,31 @@ async function beatStep(idx, total) {
     score: scoreBeatTrial(beats, taps, { relaxFrom: GUIDED, relax: 0.7 }),
     tendency: beatTendency(beatErrors(beats, taps)),
   };
+}
+
+// 박자 단계: 설명(읽을 시간) → 연습(점수 없음) → 본 테스트
+function beatIntro(lines, practiceText, goText) {
+  showView('beatintro');
+  $('#beat-intro-lines').innerHTML = lines.map((l) => `<li>${l}</li>`).join('');
+  $('#beat-practice').textContent = practiceText;
+  $('#beat-go').textContent = goText;
+  return new Promise((resolve) => {
+    $('#beat-practice').onclick = () => resolve('practice');
+    $('#beat-go').onclick = () => resolve('go');
+  });
+}
+async function beatStep(idx, total) {
+  setStep(idx, total, '박자 맞추기', '박자를 맞춰 화면을 톡톡 눌러요 👆');
+  let choice = await beatIntro(
+    ['붉은 원이 테두리에 닿을 때 화면을 <b>톡!</b>', '4번 뒤에는 가이드가 사라져요. 속으로 박자를 세며 이어서 톡톡!'],
+    '연습해 보기', '바로 시작');
+  while (choice === 'practice') {
+    setStep(idx, total, '박자 연습', '연습이에요! 점수에 들어가지 않아요 🙂');
+    await playBeats(4, 4, 1800);
+    choice = await beatIntro(['좋아요! 이제 진짜 테스트예요.', '이번엔 8번이고, 4번 뒤에 가이드가 사라져요.'], '한 번 더 연습', '시작!');
+  }
+  setStep(idx, total, '박자 맞추기', '동그라미가 테두리와 겹칠 때 톡! 중간에 가이드가 사라져요 👆');
+  return playBeats(BEAT_COUNT, GUIDED, 2000);
 }
 
 // ---------- 전체 진행 ----------
