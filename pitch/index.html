@@ -64,6 +64,16 @@ h2{font-size:23px;margin:10px 0}
 .ladder b{display:block;font-size:13px;line-height:1.35;margin:6px 0 4px;font-weight:700;word-break:keep-all}
 .ladder small{color:var(--gold);font-size:12px}
 
+/* 테스트 방법 */
+.howto summary{list-style:none;cursor:pointer}
+.howto summary::-webkit-details-marker{display:none}
+.howto .v-open{display:none}
+.howto[open] .v-open{display:inline}
+.howto[open] .v-closed{display:none}
+.howto ol{margin:0;padding:6px 4px 18px 26px;border-bottom:1px solid var(--line);color:var(--ink)}
+.howto li{margin:10px 0;line-height:1.6;font-size:15px;padding-left:4px;word-break:keep-all}
+.howto li::marker{color:var(--gold);font-weight:700}
+
 /* 카드(결과 등 보조 영역) */
 .card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:22px 20px;margin:12px 0}
 .center{text-align:center}
@@ -136,12 +146,21 @@ h2{font-size:23px;margin:10px 0}
   <button id="btn-full" class="btn primary cta">테스트 시작</button>
   <p class="cta-note">약 1분, 마이크만 있으면 돼요</p>
   <div class="rows">
+    <details id="howto" class="howto">
+      <summary class="row-btn"><span><b>테스트 방법</b><small>처음이라면 먼저 읽어 보세요</small></span><span class="val"><span class="v-closed">펼치기</span><span class="v-open">접기</span></span></summary>
+      <ol>
+        <li>조용한 곳에서 스피커로 하고, 이어폰은 빼 주세요.</li>
+        <li>먼저 "아~" 하고 3초간 소리 내면, 내 목소리에 맞는 높이로 시작해요.</li>
+        <li>기준음이 끝나면 "아~" 하고 3초쯤 길게 따라 불러요. 말이 아니라 소리의 높낮이만 봐요. 한 옥타브 높거나 낮아도 괜찮아요.</li>
+        <li>한 소절은 불이 켜지는 음을 따라 "라라라"로 이어서 불러요.</li>
+        <li>박자는 동그라미가 테두리와 겹칠 때 화면을 톡 눌러요.</li>
+      </ol>
+    </details>
     <button id="btn-daily" class="row-btn"><span><b>오늘의 한 소절</b><small id="daily-name"></small></span><span class="val">도전</span></button>
     <button id="btn-history" class="row-btn"><span><b>내 기록</b><small id="home-best"></small></span><span class="val">보기</span></button>
   </div>
   <h2 class="ladder-h" style="text-align:left">10단계 등급</h2>
   <ul id="ladder" class="ladder"></ul>
-  <p class="hint">조용한 곳에서, 이어폰 없이 스피커로 해 보세요.</p>
   <div class="ad-banner">광고 배너 (목업)</div>
 </section>
 
@@ -628,6 +647,7 @@ function goHome() {
   badge.textContent = `🔥 ${s}일 연속`;
   $('#daily-name').textContent = `오늘의 곡 · ${dailyMelody(todayStr()).name}`;
   $('#home-best').textContent = state.best > 0 ? `최고 ${state.best}점, 지금까지 ${state.resultCount}번 도전` : '첫 도전을 기다리고 있어요';
+  if (state.resultCount === 0) $('#howto').open = true; // 처음이면 설명을 펼쳐 둔다
   show('scr-home');
 }
 
@@ -739,7 +759,7 @@ async function pitchStep(idx, total, label, base, semitone) {
     const target = semitoneToHz(base, semitone);
     window.__currentTargetHz = target;
     await playNote(target, 1500);
-    setMsg('따라 불러 보세요 🎤');
+    setMsg('"아~" 하고 길게 따라 불러 보세요 🎤');
     const frames = await capture(3500, () => target);
     const score = scorePitchTrial(frames.filter((f) => f.t > 500).map((f) => f.r), target);
     if (score !== null) return score;
@@ -758,7 +778,7 @@ async function melodyStep(idx, total, melody, base) {
     highlightNote(-1);
     setMsg('준비... 3초 뒤 시작!');
     await sleep(2000);
-    setMsg('같이 불러 보세요 🎤 (불이 켜진 음을 따라서)');
+    setMsg('"라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
     const WIN = 1000;
     let cur = 0;
     window.__currentTargetHz = hz[0];
