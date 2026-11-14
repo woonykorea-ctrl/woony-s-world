@@ -805,18 +805,19 @@ async function pitchStep(idx, total, label, base, semitone) {
 }
 
 // ---------- 단계: 한 소절 ----------
+const NOTE_MS = 800; // 듣기·부르기 모두 같은 속도
 async function melodyStep(idx, total, melody, base) {
   const hz = melody.notes.map((n) => semitoneToHz(base, n.semitone));
   for (;;) {
     showView('pitch');
     renderNotes(hz.length);
     setStep(idx, total, `한 소절 따라부르기 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
-    for (let i = 0; i < hz.length; i++) { highlightNote(i); await playNote(hz[i], 550); await sleep(100); }
+    for (let i = 0; i < hz.length; i++) { highlightNote(i); await playNote(hz[i], NOTE_MS - 100); await sleep(100); }
     highlightNote(-1);
     setMsg('준비... 3초 뒤 시작!');
     await sleep(2000);
     setMsg('"라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
-    const WIN = 1000;
+    const WIN = NOTE_MS;
     let cur = 0;
     window.__currentTargetHz = hz[0];
     highlightNote(0);
