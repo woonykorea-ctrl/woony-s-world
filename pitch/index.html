@@ -469,16 +469,30 @@ function estimateRange(frames) {
   return base;
 }
 
-async function startMic() {
+// 한 번 허용받은 마이크 스트림을 앱이 닫힐 때까지 재사용한다 (테스트마다 권한을 다시 묻지 않도록)
+let sharedStream = null;
+
+async function getStream() {
+  if (sharedStream && sharedStream.getTracks().some((t) => t.readyState === 'live')) return sharedStream;
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('MIC_UNSUPPORTED');
-  let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
+    sharedStream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     });
   } catch {
+    sharedStream = null;
     throw new Error('MIC_DENIED');
   }
+  return sharedStream;
+}
+
+function releaseMic() {
+  if (sharedStream) sharedStream.getTracks().forEach((t) => t.stop());
+  sharedStream = null;
+}
+
+async function startMic() {
+  const stream = await getStream();
   const ac = getCtx();
   const src = ac.createMediaStreamSource(stream);
   const analyser = ac.createAnalyser();
@@ -501,11 +515,10 @@ async function startMic() {
   raf = requestAnimationFrame(loop);
   return {
     onFrame: (cb) => cbs.push(cb),
-    stop() {
+    stop() { // 분석만 멈추고 마이크 스트림은 유지
       stopped = true;
       cancelAnimationFrame(raf);
       src.disconnect();
-      stream.getTracks().forEach((t) => t.stop());
     },
   };
 }
@@ -925,6 +938,9 @@ function renderHistory() {
     : '<p class="hint">아직 기록이 없어요. 첫 테스트를 해 보세요!</p>';
   show('scr-history');
 }
+
+// 앱(페이지)을 닫을 때만 마이크를 놓는다
+window.addEventListener('pagehide', releaseMic);
 
 // ---------- 시작 ----------
 $('#btn-full').addEventListener('click', () => runTest('full'));
