@@ -152,6 +152,26 @@ h2{font-size:23px;margin:10px 0}
 .hero h1 .hot{color:#ff5d6c}
 #btn-full{background:linear-gradient(180deg,#ff7a85,#e8384f 55%,#bf2540);color:#fff;box-shadow:0 12px 34px -10px rgba(232,56,79,.75),inset 0 1px 0 rgba(255,255,255,.35)}
 #btn-full:active{background:linear-gradient(180deg,#ff7a85,#e8384f 55%,#bf2540);filter:brightness(.93)}
+
+.hero{position:relative}
+.dial .pivot{r:15}
+.dial .mic rect{fill:var(--gold)}
+.dial .mic path{fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round}
+.notes-float{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.notes-float span{position:absolute;bottom:42%;color:var(--gold);font-size:22px;opacity:0;animation:noteUp 7s ease-in infinite}
+.notes-float span:nth-child(1){left:8%;animation-delay:0s}
+.notes-float span:nth-child(2){left:20%;font-size:28px;animation-delay:2.3s}
+.notes-float span:nth-child(3){left:3%;font-size:18px;animation-delay:4.6s}
+.notes-float span:nth-child(4){right:8%;animation-delay:1.1s}
+.notes-float span:nth-child(5){right:20%;font-size:28px;animation-delay:3.4s}
+.notes-float span:nth-child(6){right:3%;font-size:18px;animation-delay:5.7s}
+@keyframes noteUp{0%{transform:translateY(0) rotate(-8deg);opacity:0}15%{opacity:.75}100%{transform:translateY(-130px) rotate(10deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.notes-float span{animation:none;opacity:.35}}
+#song-pick{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+#song-pick button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--glass);font-family:var(--serif);font-size:18px;font-weight:700;cursor:pointer}
+#song-pick button:active{border-color:var(--gold)}
+#song-pick button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#song-pick small{font-family:var(--sans,inherit);font-size:12px;font-weight:700;color:var(--on-gold);background:var(--gold);padding:3px 10px;border-radius:999px}
 </style>
 </head>
 <body>
@@ -160,12 +180,14 @@ h2{font-size:23px;margin:10px 0}
 <section id="scr-home" class="scr">
   <div class="topbar"><span id="streak" class="badge" hidden></span></div>
   <div class="hero">
-    <svg class="dial" viewBox="0 0 300 176" role="img" aria-label="음정 튜너 다이얼">
+    <div class="notes-float" aria-hidden="true"><span>♪</span><span>♫</span><span>♩</span><span>♬</span><span>♪</span><span>♫</span></div>
+    <svg class="dial" viewBox="0 0 300 184" role="img" aria-label="음정 튜너 다이얼">
       <g id="ticks"></g>
       <g class="needle-g"><line class="needle" x1="150" y1="150" x2="150" y2="46"></line></g>
-      <circle class="pivot" cx="150" cy="150" r="9"></circle>
+      <circle class="pivot" cx="150" cy="150" r="15"></circle>
+      <g class="mic" aria-hidden="true"><rect x="147" y="141" width="6" height="11" rx="3"></rect><path d="M143 149a7 7 0 0 0 14 0M150 156v3"></path></g>
       <text x="26" y="170" text-anchor="start">낮아요</text>
-      <text x="150" y="173" text-anchor="middle">딱 맞아요</text>
+      <text x="150" y="180" text-anchor="middle">딱 맞아요</text>
       <text x="274" y="170" text-anchor="end">높아요</text>
     </svg>
     <h1>나도 <span class="hot">가수</span>가<br>될 수 있을까?</h1>
@@ -222,6 +244,9 @@ h2{font-size:23px;margin:10px 0}
     <div id="gauge"><div id="gauge-mid"></div><div id="gauge-mark"></div></div>
     <div id="now-note">—</div>
     <div id="cents"></div>
+  </div>
+  <div id="song-view" hidden>
+    <div id="song-pick"></div>
   </div>
   <div id="beat-view" hidden>
     <div id="ring"><div id="pulse"></div></div>
@@ -406,9 +431,11 @@ function gradeFor(score) {
 
 // 저작권 없는 전통/동요/고전 멜로디 (도=0 기준 반음, 가사 없음)
 const n = (semis, beats = 1) => semis.map((semitone) => ({ semitone, beats }));
-// 누구나 아는 곡 하나만 사용 (모르는 노래는 따라 부르기 어렵다)
+// 누구나 아는 곡 3개 중에서 고른다 (모르는 노래는 따라 부르기 어렵다)
 const MELODIES = [
   { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4]) },
+  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2, 0, 2, 4, 5, 7, 7]) },
+  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0]) },
 ];
 
 // 기준음 위에서 한 번 들려주는 도레미파솔라시도
@@ -416,8 +443,12 @@ const SCALE = [0, 2, 4, 5, 7, 9, 11, 12].map((semitone, i) => ({
   semitone, label: ['도', '레', '미', '파', '솔', '라', '시', '도'][i],
 }));
 
-function dailyMelody() {
-  return MELODIES[0];
+// 오늘의 추천 곡 (날짜마다 고정)
+function dailyMelody(dateStr) {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+  return MELODIES[h % MELODIES.length];
 }
 
 // 맞춤 애창곡: 조건별 후보 곡 풀에서 매번 일부를 섞어 뽑는다 (재방문 때마다 추천이 달라짐)
@@ -745,7 +776,7 @@ function goHome() {
   const badge = $('#streak');
   badge.hidden = s === 0;
   badge.textContent = `🔥 ${s}일 연속`;
-  $('#daily-name').textContent = `오늘의 곡 · ${dailyMelody(todayStr()).name}`;
+  $('#daily-name').textContent = `오늘의 추천 · ${dailyMelody(todayStr()).name}`;
   $('#home-best').textContent = state.best > 0 ? `최고 ${state.best}점, 지금까지 ${state.resultCount}번 도전` : '첫 도전을 기다리고 있어요';
   if (state.resultCount === 0) $('#howto').open = true; // 처음이면 설명을 펼쳐 둔다
   show('scr-home');
@@ -820,6 +851,7 @@ function setStep(i, total, title, msg) {
 const setMsg = (m) => { $('#test-msg').textContent = m; };
 function showView(kind) {
   $('#pitch-view').hidden = kind !== 'pitch';
+  $('#song-view').hidden = kind !== 'song';
   $('#beat-view').hidden = kind !== 'beat';
 }
 const LOW_MSG = '소리가 너무 작게 들려요. 마이크에 가까이 대고 조금 크게 다시 불러 주세요.';
@@ -885,6 +917,23 @@ async function pitchStep(idx, total, label, base, semitone) {
     if (score !== null) return score;
     if ((await askRetry(frames)) === 'skip') return null;
   }
+}
+
+// ---------- 단계: 노래 고르기 ----------
+function chooseMelody(idx, total, recommendedId) {
+  showView('song');
+  setStep(idx, total, '한 소절 따라부르기', '아는 노래를 골라 보세요 🎵');
+  window.__currentTargetHz = null;
+  const box = $('#song-pick');
+  box.innerHTML = MELODIES.map((m) => `<button type="button" data-id="${m.id}">${m.name}${m.id === recommendedId ? '<small>오늘의 추천</small>' : ''}</button>`).join('');
+  return new Promise((resolve) => {
+    box.onclick = (e) => {
+      const b = e.target.closest('button[data-id]');
+      if (!b) return;
+      box.onclick = null;
+      resolve(MELODIES.find((m) => m.id === b.dataset.id));
+    };
+  });
 }
 
 // ---------- 단계: 한 소절 ----------
@@ -988,14 +1037,14 @@ async function runTestInner(mode) {
     const base = await rangeStep(mic);
     await scaleStep(base);
     if (mode === 'daily') {
-      const m = dailyMelody(todayStr());
+      const m = await chooseMelody(1, 1, dailyMelody(todayStr()).id);
       pitchScores.push(await melodyStep(1, 1, m, base));
     } else {
       const total = 6;
       pitchScores.push(await pitchStep(1, total, '도', base, 0));
       pitchScores.push(await pitchStep(2, total, '미', base, 4));
       pitchScores.push(await pitchStep(3, total, '솔', base, 7));
-      pitchScores.push(await melodyStep(4, total, MELODIES[Math.floor(Math.random() * MELODIES.length)], base));
+      pitchScores.push(await melodyStep(4, total, await chooseMelody(4, total, null), base));
       beatScores.push(await beatStep(5, total, 700));
       beatScores.push(await beatStep(6, total, 500));
     }
