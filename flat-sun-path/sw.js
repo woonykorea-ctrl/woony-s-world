@@ -1,6 +1,6 @@
 /* 오프라인 실행용 서비스워커: 처음 한 번 받아 두면 인터넷 없이도 열립니다.
    파일을 고치면 CACHE 이름의 숫자를 올리세요. (build_www.py가 파일 목록을 자동으로 채웁니다) */
-const CACHE = 'flat-sun-path-v2';
+const CACHE = 'flat-sun-path-v3';
 const FILES = [
   "./",
   "index.html",
