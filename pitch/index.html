@@ -33,7 +33,7 @@ h2{font-size:23px;margin:10px 0}
 .btn.cta{height:62px;font-size:19px;border-radius:999px;margin:18px 0 8px;letter-spacing:-.01em}
 
 /* 홈 */
-.topbar{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.topbar{display:flex;justify-content:flex-end;align-items:center;min-height:32px}
 .brand{font-family:var(--serif);font-size:15px;color:var(--mute);letter-spacing:.02em}
 .badge{padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--gold);font-size:13px;font-weight:700}
 .hero{position:relative;text-align:center;padding-top:8px}
@@ -147,7 +147,7 @@ h2{font-size:23px;margin:10px 0}
 <main id="app">
 
 <section id="scr-home" class="scr">
-  <div class="topbar"><span class="brand">내 노래 점수는?</span><span id="streak" class="badge" hidden></span></div>
+  <div class="topbar"><span id="streak" class="badge" hidden></span></div>
   <div class="hero">
     <svg class="dial" viewBox="0 0 300 176" role="img" aria-label="음정 튜너 다이얼">
       <g id="ticks"></g>
