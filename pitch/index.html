@@ -901,9 +901,9 @@ async function melodyStep(idx, total, melody, base) {
     // 시작 신호: 3-2-1 카운트(같은 속도의 딱! 소리) 뒤 '시작!'
     setMsg('이제 따라 부를 차례예요! 3-2-1 뒤에 시작해요 🎤');
     for (const c of ['3', '2', '1']) { setCue(c); playClick(); await sleep(NOTE_MS); }
-    setCue('시작!');
-    setTimeout(() => setCue(''), 900);
-    setMsg('"라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
+    setCue(''); // 큰 숫자는 1에서 끝내서 첫 음의 불이 가려지지 않게 한다
+    playClick(); // 네 번째 박자 = 첫 음이 시작되는 박자
+    setMsg('시작! "라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
     const WIN = NOTE_MS;
     let cur = 0;
     window.__currentTargetHz = hz[0];
