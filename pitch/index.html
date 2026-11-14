@@ -367,12 +367,17 @@ function gradeFor(score) {
 // 저작권 없는 전통/동요/고전 멜로디 (도=0 기준 반음, 가사 없음)
 const n = (semis, beats = 1) => semis.map((semitone) => ({ semitone, beats }));
 const MELODIES = [
-  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2]) },
-  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9]) },
-  { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5]) },
-  { id: 'lamb', name: '작은 양', notes: n([4, 2, 0, 2, 4, 4]) },
-  { id: 'frog', name: '개구리 노래', notes: n([0, 2, 4, 5, 4, 2]) },
+  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2, 0, 2, 4, 5, 7, 7]) },
+  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0]) },
+  { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4]) },
+  { id: 'lamb', name: '작은 양', notes: n([4, 2, 0, 2, 4, 4, 4, 2, 2, 2, 4, 7]) },
+  { id: 'frog', name: '개구리 노래', notes: n([0, 2, 4, 5, 4, 2, 0, 4, 5, 7, 9, 7]) },
 ];
+
+// 기준음 위에서 한 번 들려주는 도레미파솔라시도
+const SCALE = [0, 2, 4, 5, 7, 9, 11, 12].map((semitone, i) => ({
+  semitone, label: ['도', '레', '미', '파', '솔', '라', '시', '도'][i],
+}));
 
 function dailyMelody(dateStr) {
   let h = 0;
@@ -762,6 +767,26 @@ async function rangeStep(mic) {
   return estimateRange(frames.filter((f) => f.t > 500).map((f) => f.r));
 }
 
+// ---------- 단계: 음계 들려주기 ----------
+async function scaleStep(base) {
+  show('scr-test');
+  showView('pitch');
+  renderNotes(SCALE.length);
+  setStep(1, 1, '내 기준음으로 음계 듣기', '내 목소리 기준음으로 도레미파솔라시도를 들려드려요 🎹');
+  $('#step-label').textContent = '준비';
+  window.__currentTargetHz = null;
+  await sleep(600);
+  for (let i = 0; i < SCALE.length; i++) {
+    highlightNote(i);
+    setMsg(`${SCALE[i].label}`);
+    await playNote(semitoneToHz(base, SCALE[i].semitone), 600);
+    await sleep(80);
+  }
+  highlightNote(-1);
+  setMsg('이 음을 기억해 두세요! 곧 테스트를 시작해요 🎤');
+  await sleep(1200);
+}
+
 // ---------- 단계: 음정 따라하기 ----------
 async function pitchStep(idx, total, label, base, semitone) {
   for (;;) {
@@ -868,6 +893,7 @@ async function runTestInner(mode) {
   const beatScores = [];
   try {
     const base = await rangeStep(mic);
+    await scaleStep(base);
     if (mode === 'daily') {
       const m = dailyMelody(todayStr());
       pitchScores.push(await melodyStep(1, 1, m, base));
