@@ -549,16 +549,28 @@ async function startMic() {
   };
 }
 
+// 기준음: 크고 끝까지 유지되는 소리. 폰 스피커는 낮은 소리가 약하므로 배음을 충분히 얹는다.
+const NOTE_PEAK = 0.9;
+const RAW = [[1, 'sine', 1], [2, 'sine', 0.65], [3, 'triangle', 0.4], [4, 'sine', 0.25]];
+const RAW_SUM = RAW.reduce((a, [, , amp]) => a + amp, 0);
+const NOTE_PARTIALS = RAW.map(([mult, type, amp]) => [mult, amp / RAW_SUM, type]); // 합이 1 → 겹쳐도 찌그러지지 않음
+
+// [시간(초), 음량] 점들: 짧은 어택 → 유지 → 끝에서 부드럽게 줄임
+function noteEnvelope(durSec) {
+  const rel = Math.min(0.15, durSec * 0.2);
+  return [[0, 0.0001], [0.02, NOTE_PEAK], [Math.min(0.3, durSec * 0.3), NOTE_PEAK * 0.85], [durSec - rel, NOTE_PEAK * 0.75], [durSec, 0.0001]];
+}
+
 function playNote(hz, durMs) {
   const ac = getCtx();
   const t0 = ac.currentTime;
   const dur = durMs / 1000;
   const gain = ac.createGain();
-  gain.gain.setValueAtTime(0.0001, t0);
-  gain.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  const env = noteEnvelope(dur);
+  gain.gain.setValueAtTime(env[0][1], t0);
+  for (let i = 1; i < env.length; i++) gain.gain.linearRampToValueAtTime(env[i][1], t0 + env[i][0]);
   gain.connect(ac.destination);
-  [[1, 'sine', 1], [2, 'sine', 0.3], [3, 'triangle', 0.12]].forEach(([mult, type, amp]) => {
+  NOTE_PARTIALS.forEach(([mult, amp, type]) => {
     const o = ac.createOscillator();
     const g = ac.createGain();
     o.type = type;
@@ -577,7 +589,7 @@ function playClick() {
   const o = ac.createOscillator();
   const g = ac.createGain();
   o.frequency.value = 1000;
-  g.gain.setValueAtTime(0.3, t0);
+  g.gain.setValueAtTime(0.7, t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
   o.connect(g).connect(ac.destination);
   o.start(t0);
