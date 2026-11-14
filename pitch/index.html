@@ -5,71 +5,142 @@
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>내 노래 점수는? - 음치 &amp; 음정 테스트</title>
-<style>:root{--bg:#faf9f5;--ink:#2b2a27;--mute:#7a766d;--coral:#d97757;--coral-d:#c4623f;--card:#fff;--line:#e8e4d9;--ok:#4a9b6f}
+<style>:root{
+  --bg:#150f24;--bg2:#0f0a1b;--ink:#f3ead9;--mute:#a79eb8;--gold:#d9b46a;--gold-d:#b8944f;
+  --line:rgba(243,234,217,.13);--glass:rgba(243,234,217,.05);--ok:#7fc8a0;--rose:#c46a7e;--on-gold:#1b1330;
+  --serif:'Noto Serif KR','Noto Serif CJK KR','Nanum Myeongjo','AppleMyungjo',serif;
+  --sans:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif}
-#app{max-width:480px;margin:0 auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom));min-height:100vh}
+html,body{margin:0;background:var(--bg2);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%) fixed}
+#app{overflow-x:clip;max-width:480px;margin:0 auto;padding:18px 20px calc(28px + env(safe-area-inset-bottom));min-height:100vh}
 .scr[hidden]{display:none}
-h1{font-family:Georgia,'Noto Serif KR',serif;font-size:28px;margin:12px 0 2px;text-align:center}
-h2{font-family:Georgia,'Noto Serif KR',serif;font-size:22px;margin:8px 0;text-align:center}
-.sub{color:var(--mute);text-align:center;margin:0 0 12px}
-.hint{color:var(--mute);font-size:13px;text-align:center}
-.btn{display:block;width:100%;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:17px;font-weight:600;color:var(--ink);cursor:pointer}
-.btn:active{transform:scale(.98)}
-.btn.primary{background:var(--coral);border-color:var(--coral);color:#fff}
-.btn.big{padding:22px 16px;font-size:20px}
-.btn small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
-.badge{margin:8px auto;width:max-content;padding:6px 14px;border-radius:999px;background:#fff1e8;color:var(--coral-d);font-weight:700}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:12px 0}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* 공통 타이포 */
+h1,h2{font-family:var(--serif);font-weight:700;letter-spacing:-.02em;margin:0;text-align:center}
+h2{font-size:23px;margin:10px 0}
+.sub{color:var(--mute);text-align:center;margin:4px 0 12px;line-height:1.55;word-break:keep-all}
+.hint{color:var(--mute);font-size:13px;text-align:center;line-height:1.5}
+
+/* 버튼 */
+.btn{display:block;width:100%;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:14px;background:transparent;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.985);background:var(--glass)}
+.btn.primary{background:linear-gradient(180deg,#e6c883,var(--gold) 60%,var(--gold-d));border:0;color:var(--on-gold);font-weight:800;box-shadow:0 10px 30px -12px rgba(217,180,106,.7),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn.primary:active{background:linear-gradient(180deg,#e6c883,var(--gold) 60%,var(--gold-d));filter:brightness(.95)}
+.btn.cta{height:62px;font-size:19px;border-radius:999px;margin:18px 0 8px;letter-spacing:-.01em}
+
+/* 홈 */
+.topbar{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.brand{font-family:var(--serif);font-size:15px;color:var(--mute);letter-spacing:.02em}
+.badge{padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--gold);font-size:13px;font-weight:700}
+.hero{position:relative;text-align:center;padding-top:8px}
+.hero::before{content:"";position:absolute;left:50%;top:-10px;width:420px;height:300px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(120,60,100,.45),rgba(120,60,100,0));pointer-events:none}
+.dial{position:relative;display:block;width:100%;max-width:340px;margin:0 auto}
+.dial text{font-family:var(--sans);font-size:11px;fill:var(--mute)}
+.dial .tick{stroke:var(--mute);stroke-opacity:.55;stroke-width:1.5;stroke-linecap:round}
+.dial .tick.major{stroke:var(--ink);stroke-opacity:.8;stroke-width:2}
+.dial .sweet{fill:none;stroke:var(--gold);stroke-opacity:.9;stroke-width:4;stroke-linecap:round}
+.dial .needle{stroke:var(--gold);stroke-width:3;stroke-linecap:round}
+.dial .pivot{fill:var(--bg);stroke:var(--gold);stroke-width:3}
+.needle-g{transform-origin:150px 150px;animation:settle 1.9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes settle{0%{transform:rotate(-64deg)}38%{transform:rotate(26deg)}58%{transform:rotate(-12deg)}78%{transform:rotate(5deg)}100%{transform:rotate(0)}}
+.hero h1{font-size:34px;line-height:1.25;margin:16px 0 10px}
+.hero .sub{max-width:300px;margin:0 auto 6px;font-size:15px}
+.cta-note{text-align:center;color:var(--mute);font-size:13px;margin:6px 0 22px}
+.rows{border-top:1px solid var(--line)}
+.row-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:18px 2px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;cursor:pointer}
+.row-btn b{display:block;font-size:16px;font-weight:700}
+.row-btn small{display:block;color:var(--mute);font-size:13px;margin-top:3px}
+.row-btn .val{color:var(--gold);font-weight:700;font-size:15px}
+.row-btn .val::after{content:" ›";color:var(--mute)}
+.ladder-h{margin:26px 0 10px;font-family:var(--serif);font-size:17px}
+.ladder{display:flex;gap:10px;overflow-x:auto;padding:2px 20px 10px;margin:0 -20px;scroll-snap-type:x proximity;scroll-padding-left:20px;list-style:none;scrollbar-width:none}
+.ladder::-webkit-scrollbar{display:none}
+.ladder li{flex:0 0 112px;scroll-snap-align:start;padding:14px 10px;border:1px solid var(--line);border-radius:16px;background:var(--glass);text-align:center}
+.ladder .e{font-size:28px;display:block}
+.ladder b{display:block;font-size:13px;line-height:1.35;margin:6px 0 4px;font-weight:700;word-break:keep-all}
+.ladder small{color:var(--gold);font-size:12px}
+
+/* 카드(결과 등 보조 영역) */
+.card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:22px 20px;margin:12px 0}
 .center{text-align:center}
-.msg{text-align:center;font-size:18px;min-height:28px}
-.progress{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:14px}
-.bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--coral);transition:width .3s}
+
+/* 테스트 */
+.msg{text-align:center;font-size:18px;min-height:28px;line-height:1.5;margin:6px 0}
+.progress{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}
+.bar{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#pitch-view{padding-top:7vh}
 #notes{display:flex;gap:8px;justify-content:center;margin:16px 0;min-height:34px}
-#notes span{width:34px;height:34px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mute)}
-#notes span.on{background:var(--coral);color:#fff;transform:scale(1.2)}
-#gauge{position:relative;height:56px;margin:24px 8px 8px;background:linear-gradient(90deg,#f6d9cc,#d8efe2 40%,#d8efe2 60%,#f6d9cc);border-radius:28px;overflow:hidden}
-#gauge-mid{position:absolute;left:50%;top:0;bottom:0;width:3px;background:var(--ok);transform:translateX(-50%)}
-#gauge-mark{position:absolute;top:8px;width:40px;height:40px;margin-left:-20px;left:50%;border-radius:50%;background:var(--coral);opacity:.25;transition:left .08s linear,opacity .1s}
+#notes span{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mute)}
+#notes span.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:800;transform:scale(1.2)}
+#gauge{position:relative;height:56px;margin:28px 4px 10px;border-radius:28px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(90deg,rgba(196,106,126,.35),rgba(127,200,160,.28) 40%,rgba(127,200,160,.28) 60%,rgba(196,106,126,.35))}
+#gauge-mid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--ok);transform:translateX(-50%)}
+#gauge-mark{position:absolute;top:8px;width:40px;height:40px;margin-left:-20px;left:50%;border-radius:50%;background:var(--gold);opacity:.25;transition:left .08s linear,opacity .1s;box-shadow:0 0 18px rgba(217,180,106,.6)}
 #gauge-mark.live{opacity:1}
-#now-note{text-align:center;font-size:42px;font-weight:700;margin-top:8px}
+#now-note{text-align:center;font-family:var(--serif);font-size:46px;font-weight:700;margin-top:10px}
 #cents{text-align:center;color:var(--mute);min-height:22px}
-#ring{position:relative;width:240px;height:240px;margin:24px auto;border:6px solid var(--coral);border-radius:50%;display:flex;align-items:center;justify-content:center}
-#pulse{width:100%;height:100%;border-radius:50%;background:rgba(217,119,87,.35);transform:scale(2.2)}
-#ring.hit{background:rgba(74,155,111,.25)}
+#ring{position:relative;width:240px;height:240px;margin:24px auto;border:4px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center}
+#pulse{width:100%;height:100%;border-radius:50%;background:rgba(217,180,106,.3);transform:scale(2.2)}
+#ring.hit{background:rgba(127,200,160,.22)}
 #retry-box{text-align:center}
-.spinner{width:44px;height:44px;margin:12px auto;border:5px solid var(--line);border-top-color:var(--coral);border-radius:50%;animation:spin 1s linear infinite}
+.spinner{width:44px;height:44px;margin:12px auto 18px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.emoji{font-size:64px}
-.score{font-size:64px;font-weight:800;color:var(--coral)}
-.score small{font-size:20px;color:var(--mute);margin-left:4px}
-.stats{display:flex;gap:8px;margin:14px 0 0}
-.stats div{flex:1;background:var(--bg);border-radius:12px;padding:10px 4px;text-align:center}
-.stats b{display:block;font-size:20px}.stats small{color:var(--mute);font-size:12px}
-.tabs{display:flex;gap:6px;margin-bottom:10px}
-.tabs button{flex:1;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:13px;font-weight:600}
-.tabs button.on{background:var(--coral);color:#fff;border-color:var(--coral)}
-#songs li{margin:6px 0}#songs ul{padding-left:18px;margin:6px 0}
-#songs .tip{background:var(--bg);border-radius:10px;padding:10px;font-size:14px;margin-top:8px}
-#share-text{width:100%;height:120px;margin:8px 0;border-radius:10px;border:1px solid var(--line);padding:8px}
-.ad-banner{margin:20px 0 0;padding:14px;text-align:center;background:#efece2;color:var(--mute);border-radius:10px;font-size:13px}
+
+/* 결과 */
+.emoji{font-size:60px}
+.score{font-family:var(--serif);font-size:92px;font-weight:700;color:var(--gold);line-height:1.05}
+.score small{font-size:20px;color:var(--mute);margin-left:4px;font-family:var(--sans)}
+.stats{display:flex;margin:18px 0 0;border-top:1px solid var(--line)}
+.stats div{flex:1;padding:14px 4px 2px;text-align:center}
+.stats div+div{border-left:1px solid var(--line)}
+.stats b{display:block;font-size:20px;font-family:var(--serif)}.stats small{color:var(--mute);font-size:12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:9px 4px;border:1px solid var(--line);border-radius:999px;background:transparent;font-size:13px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+#songs ul{padding-left:18px;margin:6px 0}#songs li{margin:7px 0}
+#songs .tip{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;line-height:1.55;margin-top:10px}
+#share-text{width:100%;height:120px;margin:8px 0;border-radius:12px;border:1px solid var(--line);background:var(--glass);color:var(--ink);padding:10px}
+.ad-banner{margin:22px 0 0;padding:14px;text-align:center;border:1px dashed var(--line);color:var(--mute);border-radius:12px;font-size:13px}
 .ad-banner[hidden]{display:none}
-.ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;z-index:99}
-#h-list .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
-#h-list .row i{display:block;height:14px;background:var(--coral);border-radius:7px}
-#h-list .row span:first-child{width:78px;color:var(--mute)}
+.ad-overlay{position:fixed;inset:0;background:rgba(10,6,20,.92);color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;z-index:99}
+
+/* 기록 */
+#h-list .row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:13px}
+#h-list .row i{display:block;height:10px;background:linear-gradient(90deg,var(--gold-d),var(--gold));border-radius:5px}
+#h-list .row span:first-child{width:56px;color:var(--mute)}
+
+@media (prefers-reduced-motion:reduce){.needle-g{animation:none}.spinner{animation-duration:2.4s}}
 </style>
 </head>
 <body>
 <main id="app">
 
 <section id="scr-home" class="scr">
-  <header><h1>🎤 내 노래 점수는?</h1><p class="sub">음치 &amp; 음정 테스트</p></header>
-  <div id="streak" class="badge" hidden></div>
-  <button id="btn-full" class="btn primary big">종합 음치 테스트<small>음정 3 · 한 소절 · 박자 2 (약 1분)</small></button>
-  <button id="btn-daily" class="btn big">오늘의 한 소절<small id="daily-name"></small></button>
-  <button id="btn-history" class="btn">내 기록 보기</button>
+  <div class="topbar"><span class="brand">내 노래 점수는?</span><span id="streak" class="badge" hidden></span></div>
+  <div class="hero">
+    <svg class="dial" viewBox="0 0 300 176" role="img" aria-label="음정 튜너 다이얼">
+      <g id="ticks"></g>
+      <g class="needle-g"><line class="needle" x1="150" y1="150" x2="150" y2="46"></line></g>
+      <circle class="pivot" cx="150" cy="150" r="9"></circle>
+      <text x="26" y="170" text-anchor="start">낮아요</text>
+      <text x="150" y="173" text-anchor="middle">딱 맞아요</text>
+      <text x="274" y="170" text-anchor="end">높아요</text>
+    </svg>
+    <h1>내 목소리,<br>몇 점일까?</h1>
+    <p class="sub">기준음을 듣고 따라 부르면 음정과 박자를 점수로 알려 드려요.</p>
+  </div>
+  <button id="btn-full" class="btn primary cta">테스트 시작</button>
+  <p class="cta-note">약 1분, 마이크만 있으면 돼요</p>
+  <div class="rows">
+    <button id="btn-daily" class="row-btn"><span><b>오늘의 한 소절</b><small id="daily-name"></small></span><span class="val">도전</span></button>
+    <button id="btn-history" class="row-btn"><span><b>내 기록</b><small id="home-best"></small></span><span class="val">보기</span></button>
+  </div>
+  <h2 class="ladder-h" style="text-align:left">10단계 등급</h2>
+  <ul id="ladder" class="ladder"></ul>
   <p class="hint">조용한 곳에서, 이어폰 없이 스피커로 해 보세요.</p>
   <div class="ad-banner">광고 배너 (목업)</div>
 </section>
@@ -501,12 +572,42 @@ function show(id) {
 }
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => goHome()));
 
+function buildDial() {
+  const g = $('#ticks');
+  if (g.childElementCount) return;
+  let html = '';
+  for (let a = -70; a <= 70; a += 5) {
+    const major = a % 35 === 0;
+    const r1 = major ? 96 : 104, r2 = 114;
+    const rad = (a * Math.PI) / 180;
+    const x = (r) => (150 + r * Math.sin(rad)).toFixed(1);
+    const y = (r) => (150 - r * Math.cos(rad)).toFixed(1);
+    html += `<line class="tick${major ? ' major' : ''}" x1="${x(r1)}" y1="${y(r1)}" x2="${x(r2)}" y2="${y(r2)}"/>`;
+  }
+  // 정확 구간(±10°)
+  const p = (a) => { const rad = (a * Math.PI) / 180; return `${(150 + 121 * Math.sin(rad)).toFixed(1)} ${(150 - 121 * Math.cos(rad)).toFixed(1)}`; };
+  html += `<path class="sweet" d="M ${p(-10)} A 121 121 0 0 1 ${p(10)}"/>`;
+  g.innerHTML = html;
+}
+function buildLadder() {
+  const el = $('#ladder');
+  if (el.childElementCount) return;
+  el.innerHTML = [100, 90, 80, 70, 60, 50, 40, 30, 20, 0].map((s) => {
+    const g = gradeFor(s);
+    const low = [95, 85, 75, 65, 55, 45, 35, 25, 15, 0][g.tier - 1];
+    return `<li><span class="e">${g.emoji}</span><b>${g.title}</b><small>${low === 95 ? '95점 이상' : low === 0 ? '0~14점' : `${low}점~`}</small></li>`;
+  }).join('');
+}
+
 function goHome() {
+  buildDial();
+  buildLadder();
   const s = activeStreak(state, todayStr());
   const badge = $('#streak');
   badge.hidden = s === 0;
-  badge.textContent = `🔥 ${s}일 연속 출석 중`;
-  $('#daily-name').textContent = `오늘의 곡: ${dailyMelody(todayStr()).name}`;
+  badge.textContent = `🔥 ${s}일 연속`;
+  $('#daily-name').textContent = `오늘의 곡 · ${dailyMelody(todayStr()).name}`;
+  $('#home-best').textContent = state.best > 0 ? `최고 ${state.best}점, 지금까지 ${state.resultCount}번 도전` : '첫 도전을 기다리고 있어요';
   show('scr-home');
 }
 
