@@ -414,6 +414,36 @@ function dailyMelody(dateStr) {
   return MELODIES[h % MELODIES.length];
 }
 
+// 맞춤 애창곡: 조건별 후보 곡 풀에서 매번 일부를 섞어 뽑는다 (재방문 때마다 추천이 달라짐)
+const SONG_POOLS = {
+  s1020: ['윤도현 - 나는 나비', '버스커버스커 - 벚꽃 엔딩', '장범준 - 흔들리는 꽃들 속에서 네 샴푸향이 느껴진거야', '아이유 - 밤편지', '볼빨간사춘기 - 우주를 줄게', '잔나비 - 주저하는 연인들을 위해', '악동뮤지션 - 오랜 날 오랜 밤', '10cm - 스토커', '데이식스 - 한 페이지가 될 수 있게'],
+  s3040: ['이적 - 다행이다', '폴킴 - 모든 날, 모든 순간', '성시경 - 거리에서', '김범수 - 보고 싶다', '윤종신 - 좋니', '이문세 - 붉은 노을', '성시경 - 두 사람', '버즈 - 가시', '임재범 - 너를 위해'],
+  trotHigh: ['임영웅 - 이제 나만 믿어요', '이찬원 - 진또배기', '송가인 - 가인이어라', '장윤정 - 초혼', '임영웅 - 사랑은 늘 도망가', '임영웅 - 모래 알갱이', '영탁 - 막걸리 한잔', '김호중 - 고맙소', '나훈아 - 홍시'],
+  trotBeat: ['박현빈 - 샤방샤방', '영탁 - 찐이야', '홍진영 - 사랑의 배터리', '장윤정 - 어머나', '김연자 - 아모르 파티', '박현빈 - 곤드레 만드레', '장윤정 - 꽃', '강진 - 땡벌', '박상철 - 무조건'],
+  trotPitch: ['설운도 - 보라빛 엽서', '나훈아 - 테스형!', '진성 - 안동역에서', '심수봉 - 사랑밖엔 난 몰라', '주현미 - 비 내리는 영동교', '남진 - 님과 함께', '조용필 - 돌아와요 부산항에', '현철 - 싫다 싫어', '태진아 - 동반자'],
+};
+const SONG_TIPS = {
+  '1020': '박자가 흔들린다면 반주에 맞춰 손뼉을 치거나 무릎을 가볍게 두드리며 리듬을 타 보세요.',
+  '3040': '높게 느껴지면 노래방 리모컨에서 음정(키)을 2~3칸 내리고, 에코를 한 단계 올려 보세요.',
+  '5060': '숨이 차거나 박자를 놓치면 템포를 1~2단계 낮추고, 음정은 2칸 내린 뒤 에코를 넉넉히 주면 구성지게 들려요. 꺾기는 마지막 글자에서 숨을 살짝 뱉으며 반음 정도 자연스럽게 떨어뜨려 보세요.',
+};
+const SONG_COUNT = { '1020': 3, '3040': 3, '5060': 5 };
+
+function trotPoolKey({ score, pitchPct, beatPct, mode }) {
+  if (score >= 85) return 'trotHigh';
+  if (mode !== 'daily' && beatPct < pitchPct) return 'trotBeat';
+  return 'trotPitch';
+}
+
+function pickSongs(tab, ctx, rng = Math.random) {
+  const pool = [...(tab === '5060' ? SONG_POOLS[trotPoolKey(ctx)] : SONG_POOLS[`s${tab}`])];
+  for (let i = pool.length - 1; i > 0; i--) { // Fisher-Yates
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return { list: pool.slice(0, SONG_COUNT[tab]), tip: SONG_TIPS[tab] };
+}
+
 const KEY = 'pitch-app-v1';
 const MAX_HISTORY = 60;
 
@@ -628,6 +658,7 @@ function playClick() {
   o.start(t0);
   o.stop(t0 + 0.07);
 }
+
 
 
 
@@ -993,20 +1024,10 @@ function renderResult() {
   show('scr-result');
 }
 
-const SONGS = {
-  '1020': { label: '1020 인기곡', list: ['윤도현 - 나는 나비', '버스커버스커 - 벚꽃 엔딩', '장범준 - 흔들리는 꽃들 속에서 네 샴푸향이 느껴진거야'], tip: '박자가 흔들린다면 반주에 맞춰 손뼉을 치거나 무릎을 가볍게 두드리며 리듬을 타 보세요.' },
-  '3040': { label: '3040 발라드/팝', list: ['이적 - 다행이다', '폴킴 - 모든 날, 모든 순간', '성시경 - 거리에서'], tip: '높게 느껴지면 노래방 리모컨에서 음정(키)을 2~3칸 내리고, 에코를 한 단계 올려 보세요.' },
-};
-function trotFor() {
-  const { score, pitchPct, beatPct } = last;
-  if (score >= 85) return ['임영웅 - 이제 나만 믿어요', '이찬원 - 진또배기', '송가인 - 가인이어라', '장윤정 - 초혼'];
-  if (last.mode !== 'daily' && beatPct < pitchPct) return ['박현빈 - 샤방샤방', '영탁 - 찐이야', '홍진영 - 사랑의 배터리', '장윤정 - 어머나', '김연자 - 아모르 파티'];
-  return ['설운도 - 보라빛 엽서', '나훈아 - 테스형!', '진성 - 안동역에서', '심수봉 - 사랑밖엔 난 몰라', '주현미 - 비 내리는 영동교'];
-}
+const SONG_TABS = { '1020': '1020 인기곡', '3040': '3040 발라드/팝', '5060': '5060 트로트' };
 function renderSongs(tab) {
-  const data = tab === '5060'
-    ? { label: '5060 애창 트로트', list: trotFor(), tip: '숨이 차거나 박자를 놓치면 템포를 1~2단계 낮추고, 음정은 2칸 내린 뒤 에코를 넉넉히 주면 구성지게 들려요. 꺾기는 마지막 글자에서 숨을 살짝 뱉으며 반음 정도 자연스럽게 떨어뜨려 보세요.' }
-    : SONGS[tab];
+  last.songs = last.songs || {}; // 이번 결과에서는 탭을 오가도 같은 추천 유지, 다시 테스트하면 새로 뽑음
+  const data = last.songs[tab] || (last.songs[tab] = pickSongs(tab, last));
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   $('#songs').innerHTML = `<ul>${data.list.map((s) => `<li>${s}</li>`).join('')}</ul><div class="tip">💡 ${data.tip}</div>`;
 }
@@ -1015,7 +1036,7 @@ $('#btn-unlock').addEventListener('click', async () => {
   if (!ok) return;
   $('#btn-unlock').hidden = true;
   $('#unlocked').hidden = false;
-  $('#tabs').innerHTML = ['1020', '3040', '5060'].map((t) => `<button data-tab="${t}">${t === '5060' ? '5060 트로트' : SONGS[t].label}</button>`).join('');
+  $('#tabs').innerHTML = ['1020', '3040', '5060'].map((t) => `<button data-tab="${t}">${SONG_TABS[t]}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => renderSongs(b.dataset.tab)));
   renderSongs('5060');
 });
