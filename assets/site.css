@@ -107,3 +107,5 @@ section.block{padding:28px 0}
 }
 @media (prefers-reduced-motion:reduce){.card{transition:none}.card:not(.soon):hover{transform:none}}
 .hero .btn{margin:0 8px 10px 0}
+.chip.play{border-style:solid;border-color:var(--accent,#ffd23d);color:var(--accent,#ffd23d);font-weight:600;cursor:pointer}
+.chip.play:hover{background:rgba(255,210,61,.12)}
