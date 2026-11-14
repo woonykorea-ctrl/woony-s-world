@@ -97,9 +97,6 @@ h2{font-size:23px;margin:10px 0}
 #gauge-mark.live{opacity:1}
 #now-note{text-align:center;font-family:var(--serif);font-size:46px;font-weight:700;margin-top:10px}
 #cents{text-align:center;color:var(--mute);min-height:22px}
-#ring{position:relative;width:240px;height:240px;margin:24px auto;border:4px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center}
-#pulse{width:100%;height:100%;border-radius:50%;background:rgba(217,180,106,.3);transform:scale(2.2)}
-#ring.hit{background:rgba(127,200,160,.22)}
 #retry-box{text-align:center}
 .spinner{width:44px;height:44px;margin:12px auto 18px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -176,6 +173,42 @@ h2{font-size:23px;margin:10px 0}
 .title-row h1{margin:0;text-align:left}
 .mic-art{flex:0 0 92px;width:92px;height:92px;filter:drop-shadow(0 8px 14px rgba(232,56,79,.45))}
 .mic-art svg{width:100%;height:100%;display:block}
+
+/* ---- 박자 테스트 ---- */
+#beat-dots{display:flex;gap:8px;justify-content:center;margin:14px 0 4px}
+#beat-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold);transition:background .15s,transform .15s}
+#beat-dots i.off{border-color:var(--rose);border-style:dashed}
+#beat-dots i.now{transform:scale(1.5);background:rgba(217,180,106,.45)}
+#beat-dots i.perfect{background:var(--gold);border-color:var(--gold);transform:scale(1.35)}
+#beat-dots i.good{background:var(--ok);border-color:var(--ok)}
+#beat-dots i.early,#beat-dots i.late{background:var(--rose);border-color:var(--rose)}
+#beat-stage{position:relative;display:grid;place-items:center;min-height:340px;padding-top:36px}
+#ring{position:relative;width:200px;height:200px;border:6px solid var(--gold);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 0 rgba(217,180,106,.6),inset 0 0 30px rgba(217,180,106,.18);transition:border-color .2s,box-shadow .2s}
+#ring.bump{animation:ringBump .28s ease-out}
+#ring.off{border-style:dashed;border-color:var(--rose);box-shadow:none}
+#ring.hit{background:rgba(255,93,108,.12)}
+#pulse{position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,133,.55),rgba(232,56,79,.28) 70%,transparent);transform:scale(2.6);pointer-events:none}
+#ring.off #pulse{opacity:0}
+#ring-core{position:relative;font-family:var(--serif);font-size:30px;font-weight:800;letter-spacing:.04em;color:var(--gold)}
+#ring.off #ring-core{color:var(--rose)}
+@keyframes ringBump{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(217,180,106,.8)}50%{transform:scale(1.12)}100%{transform:scale(1);box-shadow:0 0 0 34px rgba(217,180,106,0)}}
+#judge{position:absolute;left:0;right:0;top:-4px;text-align:center;font-family:var(--serif);font-size:38px;font-weight:800;pointer-events:none;opacity:0;text-shadow:0 4px 18px rgba(0,0,0,.5)}
+#judge.show{animation:judgePop .65s ease-out}
+#judge.perfect{color:#ffd36e;font-size:46px}
+#judge.good{color:var(--ok)}
+#judge.early,#judge.late{color:#ff7a85;font-size:30px}
+@keyframes judgePop{0%{transform:translateY(14px) scale(.5);opacity:0}25%{transform:translateY(-4px) scale(1.3);opacity:1}60%{transform:scale(1);opacity:1}100%{transform:translateY(-22px) scale(1);opacity:0}}
+#beat-stage.shake{animation:shake .2s linear}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.spark{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#ffd36e;pointer-events:none;animation:sparkOut .6s ease-out forwards}
+@keyframes sparkOut{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.ripple{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px;border-radius:50%;border:3px solid rgba(243,234,217,.7);pointer-events:none;animation:rippleOut .5s ease-out forwards}
+@keyframes rippleOut{from{transform:scale(1);opacity:.9}to{transform:scale(1.7);opacity:0}}
+#beat-banner{position:absolute;inset:auto 0 -8px 0;text-align:center;font-family:var(--serif);font-size:24px;font-weight:800;color:#fff;background:linear-gradient(90deg,transparent,rgba(232,56,79,.85),transparent);padding:10px 0;animation:bannerIn .5s ease-out}
+@keyframes bannerIn{from{transform:scaleX(.2);opacity:0}to{transform:none;opacity:1}}
+.beat-type{margin:10px 0 0;text-align:center;font-family:var(--serif);font-size:17px}
+.beat-type small{display:block;margin-top:2px;font-family:var(--sans);font-size:12px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){#ring.bump,#judge.show,#beat-stage.shake,.spark,.ripple,#beat-banner{animation:none}#judge.show{opacity:1}}
 </style>
 </head>
 <body>
@@ -226,7 +259,7 @@ h2{font-size:23px;margin:10px 0}
         <li>먼저 "아~" 하고 2~3초간 소리를 내면, 내 목소리에 맞는 높이로 시작합니다.</li>
         <li>기준음이 들리면 "아~" 하고 따라 불러요. 소리의 높낮이를 테스트합니다. (한 옥타브 높거나 낮아도 괜찮아요.)</li>
         <li>한 소절을 듣고, 숫자 3, 2, 1 다음 박자에 맞춰 불이 켜지는 번호대로 "라라라" 따라 불러요.</li>
-        <li>박자는 동그라미가 테두리와 겹칠 때 화면을 한 번 톡 눌러요.</li>
+        <li>박자는 동그라미가 테두리와 겹칠 때 화면을 한 번 톡 눌러요. 중간에 가이드가 사라지면 박자를 속으로 세며 이어서 눌러요.</li>
       </ol>
     </details>
     <button id="btn-daily" class="row-btn"><span><b>오늘의 한 소절</b><small id="daily-name"></small></span><span class="val">도전</span></button>
@@ -272,8 +305,13 @@ h2{font-size:23px;margin:10px 0}
     <div id="song-pick"></div>
   </div>
   <div id="beat-view" hidden>
-    <div id="ring"><div id="pulse"></div></div>
-    <p class="hint">동그라미가 테두리와 겹칠 때 화면을 톡!</p>
+    <div id="beat-dots"></div>
+    <div id="beat-stage">
+      <div id="ring"><div id="pulse"></div><span id="ring-core">TAP</span></div>
+      <div id="judge" aria-live="polite"></div>
+      <div id="beat-banner" hidden></div>
+    </div>
+    <p class="hint" id="beat-hint">동그라미가 테두리와 겹칠 때 화면을 톡!</p>
   </div>
   <div id="retry-box" hidden>
     <p id="retry-msg">소리가 잘 안 들렸어요. 다시 불러 주세요.</p>
@@ -294,6 +332,7 @@ h2{font-size:23px;margin:10px 0}
     <p id="r-sub" class="sub"></p>
     <p id="r-detail"></p>
     <div class="stats"><div><b id="r-pitch"></b><small>음정</small></div><div><b id="r-beat"></b><small>박자</small></div><div><b id="r-streak"></b><small>연속 출석</small></div></div>
+    <p id="r-beat-type" class="beat-type" hidden></p>
   </div>
   <button id="btn-share" class="btn primary">친구에게 결과 공유하기</button>
   <textarea id="share-text" readonly hidden></textarea>
@@ -405,22 +444,51 @@ function scorePitchTrial(samples, targetHz) {
   return lerp100(median, 25, 100);
 }
 
-function scoreBeatTrial(beatTimesMs, tapTimesMs) {
-  if (!beatTimesMs.length) return 0;
+// 박자마다 (터치 시각 - 박자 시각) 부호 있는 오차(ms). 못 눌렀으면 null.
+function beatErrors(beatTimesMs, tapTimesMs) {
   const taps = [...tapTimesMs].sort((a, b) => a - b);
   const used = new Set();
-  let total = 0;
-  for (const b of beatTimesMs) {
+  return beatTimesMs.map((b) => {
     const idx = taps.findIndex((t, i) => !used.has(i) && Math.abs(t - b) < 300);
-    if (idx < 0) continue;
+    if (idx < 0) return null;
     used.add(idx);
     // 같은 비트 근처의 나머지 터치는 연타로 보고 소모
     taps.forEach((t, i) => {
       if (i !== idx && Math.abs(t - b) < 300 && Math.abs(t - b) >= Math.abs(taps[idx] - b)) used.add(i);
     });
-    total += lerp100(Math.abs(taps[idx] - b), 50, 300);
-  }
+    return taps[idx] - b;
+  });
+}
+
+// opts.relaxFrom 번째 박자부터는 오차를 relax 배로 봐 준다 (가이드가 사라진 구간)
+function scoreBeatTrial(beatTimesMs, tapTimesMs, opts = {}) {
+  if (!beatTimesMs.length) return 0;
+  const { relaxFrom = Infinity, relax = 1 } = opts;
+  const errs = beatErrors(beatTimesMs, tapTimesMs);
+  let total = 0;
+  errs.forEach((e, i) => {
+    if (e === null) return;
+    total += lerp100(Math.abs(e) * (i >= relaxFrom ? relax : 1), 50, 300);
+  });
   return total / beatTimesMs.length;
+}
+
+// 누르는 즉시 보여 줄 판정
+function judgeTap(errMs) {
+  const a = Math.abs(errMs);
+  if (a <= 50) return { key: 'perfect', label: 'Perfect!' };
+  if (a <= 110) return { key: 'good', label: '좋아요!' };
+  return errMs < 0 ? { key: 'early', label: '조금 빨라요' } : { key: 'late', label: '조금 느려요' };
+}
+
+// 결과에 붙일 박자 성향
+function beatTendency(errs) {
+  const m = errs.filter((e) => e !== null && e !== undefined);
+  if (m.length < 3) return null;
+  const avgMs = Math.round(m.reduce((x, y) => x + y, 0) / m.length);
+  if (Math.abs(avgMs) <= 35) return { key: 'steady', emoji: '🥁', title: '칼박 장인', avgMs };
+  if (avgMs < 0) return { key: 'early', emoji: '🚀', title: '박자를 앞서가는 미래인', avgMs };
+  return { key: 'late', emoji: '🐢', title: '여유 만만 느긋한 거북이', avgMs };
 }
 
 const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -736,6 +804,30 @@ function playClick() {
   o.stop(t0 + 0.07);
 }
 
+// 탭 소리: 북 같은 쿵 (Perfect이면 높은 딩 소리가 살짝 더해진다)
+function playTap(perfect) {
+  const ac = getCtx();
+  const t0 = ac.currentTime;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(180, t0);
+  o.frequency.exponentialRampToValueAtTime(55, t0 + 0.12);
+  g.gain.setValueAtTime(0.9, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+  o.connect(g).connect(ac.destination);
+  o.start(t0); o.stop(t0 + 0.18);
+  if (perfect) {
+    const o2 = ac.createOscillator();
+    const g2 = ac.createGain();
+    o2.type = 'triangle'; o2.frequency.value = 1568;
+    g2.gain.setValueAtTime(0.35, t0);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+    o2.connect(g2).connect(ac.destination);
+    o2.start(t0); o2.stop(t0 + 0.27);
+  }
+}
+
 
 
 
@@ -1021,36 +1113,82 @@ async function melodyStep(idx, total, melody, base) {
 }
 
 // ---------- 단계: 박자 ----------
-async function beatStep(idx, total, intervalMs) {
+const BEAT_MS = 650;      // 박자 간격
+const BEAT_COUNT = 8;     // 앞 4번은 가이드, 뒤 4번은 가이드 없이
+const GUIDED = 4;
+const SPARKS = Array.from({ length: 10 }, (_, i) => (i / 10) * Math.PI * 2);
+async function beatStep(idx, total) {
   showView('beat');
-  setStep(idx, total, '박자 맞추기', '동그라미가 테두리와 겹칠 때 화면을 톡! 👆');
-  const beats = [1500, 1500 + intervalMs, 1500 + 2 * intervalMs, 1500 + 3 * intervalMs];
+  setStep(idx, total, '박자 맞추기', '동그라미가 테두리와 겹칠 때 톡! 중간에 가이드가 사라져요 👆');
+  const beats = Array.from({ length: BEAT_COUNT }, (_, i) => 1500 + i * BEAT_MS);
   const taps = [];
+  const judged = {}; // 박자 번호 → 가장 좋은 오차(절댓값)
+  const ring = $('#ring'), stage = $('#beat-stage'), judge = $('#judge'), banner = $('#beat-banner');
+  const dots = $('#beat-dots');
+  dots.innerHTML = beats.map((_, i) => `<i class="${i >= GUIDED ? 'off' : ''}"></i>`).join('');
+  ring.classList.remove('off', 'hit', 'bump'); $('#ring-core').textContent = 'TAP';
+  banner.hidden = true; judge.className = ''; judge.textContent = '';
+  $('#beat-hint').textContent = '동그라미가 테두리와 겹칠 때 화면을 톡!';
   const t0 = performance.now();
   window.__beatInfo = { t0, beats }; // E2E 훅
+  const burst = (cls, n) => {
+    for (const a of n) {
+      const el = document.createElement('i');
+      el.className = cls; el.style.setProperty('--dx', `${Math.cos(a) * 110}px`); el.style.setProperty('--dy', `${Math.sin(a) * 110}px`);
+      stage.appendChild(el); setTimeout(() => el.remove(), 650);
+    }
+  };
+  const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
   const onTap = () => {
-    taps.push(performance.now() - t0);
-    $('#ring').classList.add('hit');
-    setTimeout(() => $('#ring').classList.remove('hit'), 120);
+    const t = performance.now() - t0;
+    taps.push(t);
+    ring.classList.add('hit'); setTimeout(() => ring.classList.remove('hit'), 120);
+    const rip = document.createElement('i'); rip.className = 'ripple'; stage.appendChild(rip); setTimeout(() => rip.remove(), 520);
+    let bi = 0;
+    beats.forEach((b, i) => { if (Math.abs(t - b) < Math.abs(t - beats[bi])) bi = i; });
+    const err = t - beats[bi];
+    if (Math.abs(err) > BEAT_MS / 2) { playTap(false); navigator.vibrate?.(8); return; } // 박자와 무관한 터치
+    const j = judgeTap(err);
+    playTap(j.key === 'perfect');
+    navigator.vibrate?.(j.key === 'perfect' ? [18] : 10);
+    if (judged[bi] !== undefined && judged[bi] <= Math.abs(err)) return; // 연타는 판정하지 않음
+    judged[bi] = Math.abs(err);
+    judge.textContent = j.label; judge.className = j.key; restart(judge, 'show');
+    dots.children[bi].className = `${bi >= GUIDED ? 'off ' : ''}${j.key}`;
+    if (j.key === 'perfect') { burst('spark', SPARKS); restart(stage, 'shake'); }
   };
   const scr = $('#scr-test');
   scr.addEventListener('pointerdown', onTap);
   const pulse = $('#pulse');
-  let raf = 0;
+  let raf = 0, nowDot = -1, offShown = false;
   const clicked = new Set();
   const loop = () => {
     const el = performance.now() - t0;
-    const next = beats.find((b) => b >= el - 120);
+    const gb = beats.slice(0, GUIDED);
+    const next = gb.find((b) => b >= el - 120);
     const remain = next === undefined ? 0 : next - el;
-    pulse.style.transform = `scale(${1 + 1.2 * Math.max(0, Math.min(1, remain / intervalMs))})`;
-    beats.forEach((b, i) => { if (el >= b && !clicked.has(i)) { clicked.add(i); playClick(); } });
+    pulse.style.transform = `scale(${1 + 1.6 * Math.max(0, Math.min(1, remain / BEAT_MS))})`;
+    gb.forEach((b, i) => { if (el >= b && !clicked.has(i)) { clicked.add(i); playClick(); restart(ring, 'bump'); } });
+    // 가이드가 사라지는 순간: 큰 배너 + 링 모양 변경
+    if (!offShown && el >= beats[GUIDED - 1] + BEAT_MS * 0.45) {
+      offShown = true;
+      ring.classList.add('off'); $('#ring-core').textContent = '?';
+      banner.textContent = '가이드 OFF! 박자를 이어가요'; banner.hidden = false;
+      $('#beat-hint').textContent = '속으로 박자를 세며 계속 톡톡!';
+    }
+    const cur = beats.reduce((acc, b, i) => (el >= b - BEAT_MS / 2 ? i : acc), -1);
+    if (cur !== nowDot) { dots.children[nowDot]?.classList.remove('now'); nowDot = cur; dots.children[cur]?.classList.add('now'); }
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
-  await sleep(beats[3] + 600);
+  await sleep(beats[BEAT_COUNT - 1] + 700);
   cancelAnimationFrame(raf);
   scr.removeEventListener('pointerdown', onTap);
-  return scoreBeatTrial(beats, taps);
+  banner.hidden = true;
+  return {
+    score: scoreBeatTrial(beats, taps, { relaxFrom: GUIDED, relax: 0.7 }),
+    tendency: beatTendency(beatErrors(beats, taps)),
+  };
 }
 
 // ---------- 전체 진행 ----------
@@ -1083,6 +1221,7 @@ async function runTestInner(mode) {
   }
   const pitchScores = [];
   const beatScores = [];
+  let tendency = null;
   try {
     const base = await rangeStep(mic);
     await scaleStep(base);
@@ -1090,21 +1229,22 @@ async function runTestInner(mode) {
       const m = await chooseMelody(1, 1, dailyMelody(todayStr()).id);
       pitchScores.push(await melodyStep(1, 1, m, base));
     } else {
-      const total = 6;
+      const total = 5;
       pitchScores.push(await pitchStep(1, total, '도', base, 0));
       pitchScores.push(await pitchStep(2, total, '미', base, 4));
       pitchScores.push(await pitchStep(3, total, '솔', base, 7));
       pitchScores.push(await melodyStep(4, total, await chooseMelody(4, total, null), base));
-      beatScores.push(await beatStep(5, total, 700));
-      beatScores.push(await beatStep(6, total, 500));
+      const br = await beatStep(5, total);
+      beatScores.push(br.score);
+      tendency = br.tendency;
     }
   } finally {
     mic.stop();
   }
-  await finish(pitchScores, beatScores, mode);
+  await finish(pitchScores, beatScores, mode, tendency);
 }
 
-async function finish(pitchScores, beatScores, mode) {
+async function finish(pitchScores, beatScores, mode, tendency) {
   showView('pitch');
   show('scr-loading');
   await sleep(2000);
@@ -1115,7 +1255,7 @@ async function finish(pitchScores, beatScores, mode) {
   const grade = gradeFor(score);
   state = recordResult(state, todayStr(), score, grade.tier);
   store.save(state);
-  last = { score, grade, pitchPct, beatPct, mode };
+  last = { score, grade, pitchPct, beatPct, mode, tendency };
   renderResult();
 }
 
@@ -1129,6 +1269,13 @@ function renderResult() {
   $('#r-detail').textContent = grade.detail;
   $('#r-pitch').textContent = `${pitchPct}%`;
   $('#r-beat').textContent = mode === 'daily' ? '—' : `${beatPct}%`;
+  const bt = $('#r-beat-type');
+  const ty = mode === 'daily' ? null : last.tendency;
+  bt.hidden = !ty;
+  if (ty) {
+    const how = ty.key === 'steady' ? `평균 오차 ${Math.abs(ty.avgMs)}ms` : ty.avgMs < 0 ? `평균 ${-ty.avgMs}ms 빨랐어요` : `평균 ${ty.avgMs}ms 느렸어요`;
+    bt.innerHTML = `${ty.emoji} ${ty.title}<small>${how}</small>`;
+  }
   $('#r-streak').textContent = `${activeStreak(state, todayStr())}일`;
   $('#unlocked').hidden = true;
   $('#btn-unlock').hidden = false;
