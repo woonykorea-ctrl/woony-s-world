@@ -67,7 +67,8 @@ input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
 .sw{display:inline-block;width:14px;height:0;border-top:3px solid}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
 .snd input{width:84px;flex:none}
-.snd{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 0 10px;font-size:12.5px;color:var(--dim)}
+.snd select{background:#080b13;border:1px solid var(--line);border-radius:9px;padding:5px 8px;font-size:12.5px}
+.snd{flex-wrap:wrap;display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 0 10px;font-size:12.5px;color:var(--dim)}
 .note{margin:8px 2px 0;font-size:12.5px;color:var(--dim)}
 
 .panel{padding:14px 16px 16px;display:grid;gap:10px}
@@ -126,7 +127,7 @@ td b{font-weight:600}
     <button id="btnLang" class="ghost" type="button" aria-label="Language">EN</button>
   </header>
 
-  <div class="snd"><span data-i18n="sndLbl">소리</span><input id="vol" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="volume"><div class="seg" role="group" aria-label="sound"><button id="btnBgm" type="button" aria-pressed="false" data-i18n="bgm">🎵 배경음</button><button id="btnSfx" type="button" aria-pressed="false" data-i18n="sfx">🔔 효과음</button></div></div>
+  <div class="snd"><span data-i18n="sndLbl">소리</span><select id="bgmStyle" aria-label="music style"><option value="calm" data-i18n="stCalm">🌌 차분한 우주</option><option value="pulse" data-i18n="stPulse">🫀 묵직한 맥박</option></select><input id="vol" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="volume"><div class="seg" role="group" aria-label="sound"><button id="btnBgm" type="button" aria-pressed="false" data-i18n="bgm">🎵 배경음</button><button id="btnSfx" type="button" aria-pressed="false" data-i18n="sfx">🔔 효과음</button></div></div>
 
   <section class="ctrl card" aria-label="controls">
     <div class="fld">
@@ -276,7 +277,7 @@ var T = {
     evSpring:'춘분', evSummer:'하지', evAutumn:'추분', evWinter:'동지', evToday:'오늘',
     lgFlat:'평면: 빛이 닿는 범위', lgGlobe:'지구본: 낮과 밤의 경계', lgSun:'태양 바로 밑', lgAgree:'두 모델이 일치', lgDiff:'두 모델이 다름',
     mapNote:'북극 중심 정거방위도법 지도입니다. 점을 눌러 도시를 바꿀 수 있습니다. 해안선은 Natural Earth 110m 공개 데이터입니다.',
-    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', vwSun:'태양 기준', vwCity:'도시 기준', sunWord:'태양', backWord:'지구 뒤쪽', sndLbl:'소리', bgm:'🎵 배경음', sfx:'🔔 효과음', tiltWord:'지축 기울기', gNoteSun:'공전면이 수평이 되게 놓고 본 모습입니다. 태양은 오른쪽에 고정돼 있고 지구가 자전합니다. 흰 원은 선택한 도시(뒷면이면 보이지 않음), 분홍 선은 지축, 점선은 공전면에 수직인 선이며 둘 사이 각이 지축 기울기 23.44°입니다.', gNoteCity:'선택한 도시를 가운데 고정해 본 시점입니다. 대륙은 그대로이고 태양과 낮·밤 경계가 움직입니다. 분홍 선은 지축, 점선은 공전면에 수직인 선입니다. 태양은 실제 위치를 그대로 투영해 움직이며, 지구 뒤쪽(밤)에 있을 때는 흐리게 표시됩니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
+    tblTitle:'선택한 순간의 비교', thGlobe:'지구본', thFlat:'평면', gTitle:'지구본으로 본 모습', vwSun:'태양 기준', vwCity:'도시 기준', sunWord:'태양', backWord:'지구 뒤쪽', sndLbl:'소리', stCalm:'🌌 차분한 우주', stPulse:'🫀 묵직한 맥박', bgm:'🎵 배경음', sfx:'🔔 효과음', tiltWord:'지축 기울기', gNoteSun:'공전면이 수평이 되게 놓고 본 모습입니다. 태양은 오른쪽에 고정돼 있고 지구가 자전합니다. 흰 원은 선택한 도시(뒷면이면 보이지 않음), 분홍 선은 지축, 점선은 공전면에 수직인 선이며 둘 사이 각이 지축 기울기 23.44°입니다.', gNoteCity:'선택한 도시를 가운데 고정해 본 시점입니다. 대륙은 그대로이고 태양과 낮·밤 경계가 움직입니다. 분홍 선은 지축, 점선은 공전면에 수직인 선입니다. 태양은 실제 위치를 그대로 투영해 움직이며, 지구 뒤쪽(밤)에 있을 때는 흐리게 표시됩니다.', ariaGlobe:'선택한 도시를 가운데 두고 본 지구본. 낮과 밤이 음영으로 나뉘어 보임',
     rElev:'태양 고도', rDN:'낮·밤', rLen:'낮의 길이', rRise:'해 뜸~해 짐', rDist:'태양 바로 밑까지',
     day:'낮', night:'밤', allDay:'하루 종일 낮', allNight:'하루 종일 밤', hours:'시간', never:'—',
     modelNote:'지구본은 구면 천문 계산, 평면은 태양 높이 5,000km와 빛 범위 11,300km를 가정한 모델입니다.',
@@ -300,7 +301,7 @@ var T = {
     evSpring:'March equinox', evSummer:'June solstice', evAutumn:'Sept equinox', evWinter:'Dec solstice', evToday:'Today',
     lgFlat:'Flat: reach of the light', lgGlobe:'Globe: day/night boundary', lgSun:'Point under the Sun', lgAgree:'Models agree', lgDiff:'Models differ',
     mapNote:'North-pole azimuthal equidistant map. Tap a dot to switch city. Coastlines: Natural Earth 110m, public domain.',
-    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', vwSun:'Sun-fixed', vwCity:'City-fixed', sunWord:'Sun', backWord:'behind Earth', sndLbl:'Sound', bgm:'🎵 Music', sfx:'🔔 Effects', tiltWord:'Axial tilt', gNoteSun:'Seen with the orbital plane horizontal. The Sun stays fixed on the right while Earth rotates. The white ring is the selected city (hidden on the far side); the pink line is Earth’s axis and the dashed line is perpendicular to the orbital plane. The angle between them is the 23.44° axial tilt.', gNoteCity:'View fixed on the selected city. The continents stay put while the Sun and the day/night boundary move. Pink: Earth’s axis; dashed: perpendicular to the orbital plane. The Sun moves at its true projected position and is dimmed when it is behind Earth (night).', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
+    tblTitle:'Comparison at this moment', thGlobe:'Globe', thFlat:'Flat', gTitle:'The same moment on a globe', vwSun:'Sun-fixed', vwCity:'City-fixed', sunWord:'Sun', backWord:'behind Earth', sndLbl:'Sound', stCalm:'🌌 Calm space', stPulse:'🫀 Deep pulse', bgm:'🎵 Music', sfx:'🔔 Effects', tiltWord:'Axial tilt', gNoteSun:'Seen with the orbital plane horizontal. The Sun stays fixed on the right while Earth rotates. The white ring is the selected city (hidden on the far side); the pink line is Earth’s axis and the dashed line is perpendicular to the orbital plane. The angle between them is the 23.44° axial tilt.', gNoteCity:'View fixed on the selected city. The continents stay put while the Sun and the day/night boundary move. Pink: Earth’s axis; dashed: perpendicular to the orbital plane. The Sun moves at its true projected position and is dimmed when it is behind Earth (night).', ariaGlobe:'Globe centered on the selected city, with day and night shown as shading',
     rElev:'Sun elevation', rDN:'Day / night', rLen:'Day length', rRise:'Sunrise – sunset', rDist:'Distance to point under Sun',
     day:'Day', night:'Night', allDay:'Day all day', allNight:'Night all day', hours:'h', never:'—',
     modelNote:'The globe uses spherical astronomy; the flat model assumes a Sun 5,000 km high and light reaching 11,300 km.',
@@ -596,22 +597,18 @@ function render() {
 
 /* ================= 소리 (Web Audio로 직접 합성, 음원 파일 없음) ================= */
 var Snd = (function () {
-  var AC = window.AudioContext || window.webkitAudioContext, ac = null, master, bgmBus, bgmFilt, sfxBus, noiseBuf, bgmOn = false, sfxOn = false, vol = 0.8;
-  var isDay = true, lastTick = 0, lastDay = null, lastDayT = 0, seqT = 0, nextT = 0, step = 0, playing = false;
-  var BPM = 112, E = 60 / BPM / 2;
-  /* C - Am - F - G, 한 마디 = 8분음표 8개, 4마디 = 32스텝 루프 */
-  var BASS = [130.81, 110, 87.31, 98], ARP = [[523.25, 659.25, 783.99], [440, 523.25, 659.25], [349.23, 440, 523.25], [392, 493.88, 587.33]];
-  var AP = [0, 1, 2, 1, 2, 1, 0, 1];
-  var MEL = { 0: 659.25, 2: 783.99, 4: 880, 5: 783.99, 7: 659.25, 8: 659.25, 10: 523.25, 12: 587.33, 13: 659.25, 15: 523.25, 16: 880, 18: 783.99, 20: 698.46, 22: 783.99, 24: 587.33, 26: 783.99, 28: 987.77, 29: 783.99, 31: 587.33 };
+  var AC = window.AudioContext || window.webkitAudioContext, ac = null, master, bgmBus, bgmFilt, sfxBus, bgmOn = false, sfxOn = false, vol = 0.8;
+  var stopT = 0, isDay = true, lastTick = 0, lastDay = null, lastDayT = 0, seqT = 0, nextT = 0, step = 0, playing = false;
+  var CH = [[110, 164.81, 220, 261.63, 329.63], [87.31, 130.81, 220, 261.63, 349.23], [130.81, 196, 261.63, 329.63, 392], [98, 146.83, 196, 246.94, 293.66]];
+  var pad = null, chordI = 0, chordT = 0, swT = 0, pulse = false, BEAT = 60 / 66, beatN = 0;
   function ensure() {
     if (!AC) return false;
     if (!ac) {
       ac = new AC(); master = ac.createGain(); master.gain.value = vol;
       var comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
-      bgmFilt = ac.createBiquadFilter(); bgmFilt.type = 'lowpass'; bgmFilt.frequency.value = isDay ? 9000 : 2200; bgmFilt.connect(master);
+      bgmFilt = ac.createBiquadFilter(); bgmFilt.type = 'lowpass'; bgmFilt.frequency.value = 9000; bgmFilt.connect(master);
       bgmBus = ac.createGain(); bgmBus.gain.value = 0; bgmBus.connect(bgmFilt);
       sfxBus = ac.createGain(); sfxBus.gain.value = 0.7; sfxBus.connect(master);
-      noiseBuf = ac.createBuffer(1, ac.sampleRate * 0.1, ac.sampleRate); var nd = noiseBuf.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     }
     if (ac.state === 'suspended') ac.resume();
     return true;
@@ -622,31 +619,48 @@ var Snd = (function () {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.connect(g); g.connect(bus || sfxBus); o.start(t); o.stop(t + d + 0.05);
   }
-  function hat(t0, v) {
-    var t = ac.currentTime + t0, src = ac.createBufferSource(), hp = ac.createBiquadFilter(), g = ac.createGain();
-    src.buffer = noiseBuf; hp.type = 'highpass'; hp.frequency.value = 7000;
-    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-    src.connect(hp); hp.connect(g); g.connect(bgmBus); src.start(t); src.stop(t + 0.06);
+  function startPad() {
+    if (pad) return;
+    var filt = ac.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = isDay ? 720 : 380; filt.Q.value = 0.7;
+    var lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.06; lg.gain.value = 160; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
+    var out = ac.createGain(); out.gain.value = 0.15; filt.connect(out); out.connect(bgmBus);
+    var sw = ac.createOscillator(), swg = ac.createGain(); sw.frequency.value = 0.045; swg.gain.value = 0.03; sw.connect(swg); swg.connect(out.gain); sw.start();
+    var oscs = [];
+    CH[chordI].forEach(function (f, i) {
+      [-1, 1].forEach(function (sg) {
+        if (i === 0 && sg === 1) return;
+        var o = ac.createOscillator(), g = ac.createGain(); o.type = i === 0 ? 'sine' : 'sawtooth'; o.frequency.value = f; o.detune.value = i === 0 ? 0 : sg * (6 + i);
+        g.gain.value = i === 0 ? 0.9 : 0.16; o.connect(g); g.connect(filt); o.start(); oscs.push({ o: o, i: i });
+      });
+    });
+    pad = { filt: filt, lfo: lfo, sw: sw, oscs: oscs };
+    chordT = setInterval(nextChord, 12000); swT = setTimeout(swell, 3000);
   }
-  function playStep(i, t) {
-    var r = t - ac.currentTime, bar = Math.floor(i / 8), k = i % 8;
-    if (k === 0 || k === 4) { tone(BASS[bar], 0.34, 'triangle', 0.42, r, 0, bgmBus); tone(120, 0.16, 'sine', 0.4, r, 45, bgmBus); }
-    if (k % 2 === 1) hat(r, 0.07);
-    tone(ARP[bar][AP[k]], 0.3, 'triangle', k === 0 ? 0.2 : 0.14, r, 0, bgmBus);
-    if (MEL[i]) { tone(MEL[i], 0.42, 'sine', 0.3, r, 0, bgmBus); tone(MEL[i] * 2, 0.2, 'sine', 0.04, r, 0, bgmBus); }
+  function stopPad() {
+    clearInterval(chordT); clearTimeout(swT); if (!pad) return;
+    pad.oscs.forEach(function (x) { try { x.o.stop(); } catch (e) {} }); try { pad.lfo.stop(); pad.sw.stop(); } catch (e) {} pad = null;
+  }
+  function nextChord() { if (!pad) return; chordI = (chordI + 1) % CH.length; pad.oscs.forEach(function (x) { x.o.frequency.setTargetAtTime(CH[chordI][x.i], ac.currentTime, 2.2); }); }
+  function swell() {
+    if (!pad) return;
+    var f = CH[chordI][2 + Math.floor(Math.random() * 3)] * 2, t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.025, t + 3); g.gain.linearRampToValueAtTime(0.0001, t + 7.5);
+    o.connect(g); g.connect(bgmBus); o.start(t); o.stop(t + 8); swT = setTimeout(swell, 5500 + Math.random() * 4000);
   }
   function sched() {
     if (!playing) return;
     if (nextT < ac.currentTime) nextT = ac.currentTime + 0.05;
-    while (nextT < ac.currentTime + 0.3) { playStep(step, nextT); nextT += E; step = (step + 1) % 32; }
+    while (nextT < ac.currentTime + 0.3) { if (pulse) tone(72, 0.5, 'sine', beatN % 4 === 0 ? 0.3 : 0.2, nextT - ac.currentTime, 42, bgmBus); beatN++; nextT += BEAT; }
   }
   return {
     bgm: function (on) {
       bgmOn = on; if (!ensure()) return on;
-      if (on) { if (!playing) { playing = true; step = 0; nextT = ac.currentTime + 0.1; seqT = setInterval(sched, 80); } bgmBus.gain.cancelScheduledValues(ac.currentTime); bgmBus.gain.setTargetAtTime(1, ac.currentTime, 0.1); }
-      else { bgmBus.gain.setTargetAtTime(0, ac.currentTime, 0.15); setTimeout(function () { if (!bgmOn) { playing = false; clearInterval(seqT); } }, 900); }
+      clearTimeout(stopT);
+      if (on) { startPad(); if (!playing) { playing = true; beatN = 0; nextT = ac.currentTime + 0.1; seqT = setInterval(sched, 80); } bgmBus.gain.cancelScheduledValues(ac.currentTime); bgmBus.gain.setTargetAtTime(1, ac.currentTime, 1.0); }
+      else { bgmBus.gain.setTargetAtTime(0, ac.currentTime, 0.3); stopT = setTimeout(function () { if (!bgmOn) { playing = false; clearInterval(seqT); stopPad(); } }, 2000); }
       return on;
     },
+    style: function (m) { pulse = m === 'pulse'; },
     sfx: function (on) { sfxOn = on; if (!ensure()) return on; if (on) { tone(659, 0.18, 'sine', 0.4, 0); tone(988, 0.3, 'sine', 0.3, 0.08); } return on; },
     vol: function (v) { vol = v; if (master) master.gain.setTargetAtTime(v, ac.currentTime, 0.05); },
     play: function (on) { if (!sfxOn || !ac) return; if (on) { tone(523, 0.16, 'sine', 0.45, 0); tone(784, 0.24, 'sine', 0.45, 0.09); } else { tone(659, 0.14, 'sine', 0.4, 0); tone(440, 0.24, 'sine', 0.4, 0.09); } },
@@ -655,7 +669,7 @@ var Snd = (function () {
     chime: function () { if (!sfxOn || !ac) return; tone(880, 0.5, 'sine', 0.32, 0); tone(1318.5, 0.6, 'sine', 0.2, 0.07); },
     mood: function (day) {
       isDay = day;
-      if (bgmFilt) bgmFilt.frequency.setTargetAtTime(day ? 9000 : 2200, ac.currentTime, 1.5);
+      if (pad) pad.filt.frequency.setTargetAtTime(day ? 720 : 380, ac.currentTime, 2);
       if (lastDay !== null && lastDay !== day && sfxOn && ac) {
         var n = performance.now();
         if (n - lastDayT > 500) { lastDayT = n; (day ? [392, 523, 659, 784] : [784, 659, 523, 392]).forEach(function (f, i) { tone(f, 0.45, 'sine', 0.28, i * 0.1); }); }
@@ -714,6 +728,7 @@ function init() {
   var bB = $('btnBgm'), bS = $('btnSfx');
   bB.addEventListener('click', function () { var on = bB.getAttribute('aria-pressed') !== 'true'; bB.setAttribute('aria-pressed', Snd.bgm(on)); });
   bS.addEventListener('click', function () { var on = bS.getAttribute('aria-pressed') !== 'true'; bS.setAttribute('aria-pressed', Snd.sfx(on)); });
+  $('bgmStyle').addEventListener('change', function (e) { Snd.style(e.target.value); });
   $('vol').addEventListener('input', function (e) { Snd.vol(+e.target.value); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) Snd.suspend(); else Snd.resume(); });
   var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(render, 60); });
