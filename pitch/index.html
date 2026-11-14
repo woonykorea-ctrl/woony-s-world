@@ -566,7 +566,12 @@ function activeStreak(state, todayStr) {
 }
 
 // 광고 목업. 앱(Capacitor) 래핑 시 이 객체의 세 메서드만 AdMob 플러그인 호출로 교체하면 된다. (AdMob 교체 지점)
-const shouldShowInterstitial = (resultCount) => resultCount > 0 && resultCount % 2 === 0;
+// 전면 광고 정책: 점수 화면 전에는 절대 넣지 않는다. 첫 테스트는 무광고,
+// 이후 '테스트를 시작하기 전'에 2번에 한 번, 직전 광고와 최소 간격을 둔다.
+const INTERSTITIAL_MIN_GAP_MS = 120000;
+const shouldShowInterstitial = (completedCount, nowMs, lastAdMs) =>
+  completedCount > 0 && completedCount % 2 === 1
+  && (lastAdMs == null || nowMs - lastAdMs >= INTERSTITIAL_MIN_GAP_MS);
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -1050,10 +1055,17 @@ async function beatStep(idx, total, intervalMs) {
 
 // ---------- 전체 진행 ----------
 let running = false;
+let lastAdAt = null;
 async function runTest(mode) {
   if (running) return; // 더블탭으로 테스트가 겹쳐 시작되는 것을 막는다
   running = true;
-  try { await runTestInner(mode); } finally { running = false; }
+  try {
+    if (shouldShowInterstitial(state.resultCount, Date.now(), lastAdAt)) { // 점수 전이 아니라 '다시 도전' 시작 전에
+      await Ads.interstitial();
+      lastAdAt = Date.now();
+    }
+    await runTestInner(mode);
+  } finally { running = false; }
 }
 
 async function runTestInner(mode) {
@@ -1103,7 +1115,6 @@ async function finish(pitchScores, beatScores, mode) {
   const grade = gradeFor(score);
   state = recordResult(state, todayStr(), score, grade.tier);
   store.save(state);
-  if (shouldShowInterstitial(state.resultCount)) await Ads.interstitial();
   last = { score, grade, pitchPct, beatPct, mode };
   renderResult();
 }
