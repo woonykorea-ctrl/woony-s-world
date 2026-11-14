@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 노래 점수는? - 음치 &amp; 음정 테스트</title>
+<style>:root{--bg:#faf9f5;--ink:#2b2a27;--mute:#7a766d;--coral:#d97757;--coral-d:#c4623f;--card:#fff;--line:#e8e4d9;--ok:#4a9b6f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif}
+#app{max-width:480px;margin:0 auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom));min-height:100vh}
+.scr[hidden]{display:none}
+h1{font-family:Georgia,'Noto Serif KR',serif;font-size:28px;margin:12px 0 2px;text-align:center}
+h2{font-family:Georgia,'Noto Serif KR',serif;font-size:22px;margin:8px 0;text-align:center}
+.sub{color:var(--mute);text-align:center;margin:0 0 12px}
+.hint{color:var(--mute);font-size:13px;text-align:center}
+.btn{display:block;width:100%;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:17px;font-weight:600;color:var(--ink);cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn.big{padding:22px 16px;font-size:20px}
+.btn small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
+.badge{margin:8px auto;width:max-content;padding:6px 14px;border-radius:999px;background:#fff1e8;color:var(--coral-d);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:12px 0}
+.center{text-align:center}
+.msg{text-align:center;font-size:18px;min-height:28px}
+.progress{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:14px}
+.bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--coral);transition:width .3s}
+#notes{display:flex;gap:8px;justify-content:center;margin:16px 0;min-height:34px}
+#notes span{width:34px;height:34px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mute)}
+#notes span.on{background:var(--coral);color:#fff;transform:scale(1.2)}
+#gauge{position:relative;height:56px;margin:24px 8px 8px;background:linear-gradient(90deg,#f6d9cc,#d8efe2 40%,#d8efe2 60%,#f6d9cc);border-radius:28px;overflow:hidden}
+#gauge-mid{position:absolute;left:50%;top:0;bottom:0;width:3px;background:var(--ok);transform:translateX(-50%)}
+#gauge-mark{position:absolute;top:8px;width:40px;height:40px;margin-left:-20px;left:50%;border-radius:50%;background:var(--coral);opacity:.25;transition:left .08s linear,opacity .1s}
+#gauge-mark.live{opacity:1}
+#now-note{text-align:center;font-size:42px;font-weight:700;margin-top:8px}
+#cents{text-align:center;color:var(--mute);min-height:22px}
+#ring{position:relative;width:240px;height:240px;margin:24px auto;border:6px solid var(--coral);border-radius:50%;display:flex;align-items:center;justify-content:center}
+#pulse{width:100%;height:100%;border-radius:50%;background:rgba(217,119,87,.35);transform:scale(2.2)}
+#ring.hit{background:rgba(74,155,111,.25)}
+#retry-box{text-align:center}
+.spinner{width:44px;height:44px;margin:12px auto;border:5px solid var(--line);border-top-color:var(--coral);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.emoji{font-size:64px}
+.score{font-size:64px;font-weight:800;color:var(--coral)}
+.score small{font-size:20px;color:var(--mute);margin-left:4px}
+.stats{display:flex;gap:8px;margin:14px 0 0}
+.stats div{flex:1;background:var(--bg);border-radius:12px;padding:10px 4px;text-align:center}
+.stats b{display:block;font-size:20px}.stats small{color:var(--mute);font-size:12px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:13px;font-weight:600}
+.tabs button.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+#songs li{margin:6px 0}#songs ul{padding-left:18px;margin:6px 0}
+#songs .tip{background:var(--bg);border-radius:10px;padding:10px;font-size:14px;margin-top:8px}
+#share-text{width:100%;height:120px;margin:8px 0;border-radius:10px;border:1px solid var(--line);padding:8px}
+.ad-banner{margin:20px 0 0;padding:14px;text-align:center;background:#efece2;color:var(--mute);border-radius:10px;font-size:13px}
+.ad-banner[hidden]{display:none}
+.ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;z-index:99}
+#h-list .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+#h-list .row i{display:block;height:14px;background:var(--coral);border-radius:7px}
+#h-list .row span:first-child{width:78px;color:var(--mute)}
+</style>
+</head>
+<body>
+<main id="app">
+
+<section id="scr-home" class="scr">
+  <header><h1>🎤 내 노래 점수는?</h1><p class="sub">음치 &amp; 음정 테스트</p></header>
+  <div id="streak" class="badge" hidden></div>
+  <button id="btn-full" class="btn primary big">종합 음치 테스트<small>음정 3 · 한 소절 · 박자 2 (약 1분)</small></button>
+  <button id="btn-daily" class="btn big">오늘의 한 소절<small id="daily-name"></small></button>
+  <button id="btn-history" class="btn">내 기록 보기</button>
+  <p class="hint">조용한 곳에서, 이어폰 없이 스피커로 해 보세요.</p>
+  <div class="ad-banner">광고 배너 (목업)</div>
+</section>
+
+<section id="scr-error" class="scr" hidden>
+  <div class="card">
+    <h2>😢 앗, 문제가 생겼어요</h2>
+    <p id="error-msg"></p>
+    <button id="btn-error-retry" class="btn primary">다시 시도</button>
+    <button class="btn" data-go="home">처음으로</button>
+  </div>
+</section>
+
+<section id="scr-test" class="scr" hidden>
+  <div class="progress"><span id="step-label"></span><div class="bar"><i id="step-bar"></i></div></div>
+  <h2 id="test-title"></h2>
+  <p id="test-msg" class="msg"></p>
+  <div id="pitch-view">
+    <div id="notes"></div>
+    <div id="gauge"><div id="gauge-mid"></div><div id="gauge-mark"></div></div>
+    <div id="now-note">—</div>
+    <div id="cents"></div>
+  </div>
+  <div id="beat-view" hidden>
+    <div id="ring"><div id="pulse"></div></div>
+    <p class="hint">동그라미가 테두리와 겹칠 때 화면을 톡!</p>
+  </div>
+  <div id="retry-box" hidden>
+    <p>소리가 잘 안 들렸어요. 다시 불러 주세요.</p>
+    <button id="btn-retry" class="btn primary">다시 하기</button>
+    <button id="btn-skip" class="btn">건너뛰기</button>
+  </div>
+</section>
+
+<section id="scr-loading" class="scr" hidden>
+  <div class="card center"><div class="spinner"></div><p>목소리 주파수와 박자 감각을<br>정밀 분석 중입니다...</p></div>
+</section>
+
+<section id="scr-result" class="scr" hidden>
+  <div class="card center">
+    <div id="r-emoji" class="emoji"></div>
+    <div class="score"><span id="r-score"></span><small>점</small></div>
+    <h2 id="r-title"></h2>
+    <p id="r-sub" class="sub"></p>
+    <p id="r-detail"></p>
+    <div class="stats"><div><b id="r-pitch"></b><small>음정</small></div><div><b id="r-beat"></b><small>박자</small></div><div><b id="r-streak"></b><small>연속 출석</small></div></div>
+  </div>
+  <button id="btn-share" class="btn primary">친구에게 결과 공유하기</button>
+  <textarea id="share-text" readonly hidden></textarea>
+  <div id="locked" class="card">
+    <button id="btn-unlock" class="btn">🔒 광고 보고 내 맞춤 애창곡 확인하기</button>
+    <div id="unlocked" hidden>
+      <div class="tabs" id="tabs"></div>
+      <div id="songs"></div>
+    </div>
+  </div>
+  <button id="btn-again" class="btn">다시 테스트하기</button>
+  <button class="btn" data-go="home">처음으로</button>
+  <div class="ad-banner">광고 배너 (목업)</div>
+</section>
+
+<section id="scr-history" class="scr" hidden>
+  <h2>📈 내 기록</h2>
+  <div class="stats"><div><b id="h-best"></b><small>최고 점수</small></div><div><b id="h-count"></b><small>총 도전</small></div><div><b id="h-streak"></b><small>연속 출석</small></div></div>
+  <div id="h-list"></div>
+  <button class="btn" data-go="home">처음으로</button>
+  <div class="ad-banner">광고 배너 (목업)</div>
+</section>
+
+</main>
+<script>// 피치 검출(YIN 계열) + 옥타브 무시 cent 계산
+const MIN_HZ = 50;
+const MAX_HZ = 1000;
+const RMS_GATE = 0.01;
+const DIP_THRESHOLD = 0.25;
+
+function detectPitch(buf, sampleRate) {
+  const n = buf.length;
+  let sum = 0;
+  for (let i = 0; i < n; i++) sum += buf[i] * buf[i];
+  if (Math.sqrt(sum / n) < RMS_GATE) return null;
+
+  const tauMin = Math.max(2, Math.floor(sampleRate / MAX_HZ));
+  const tauMax = Math.min(Math.floor(sampleRate / MIN_HZ), Math.floor(n / 2));
+  const w = n - tauMax;
+  if (w < 64 || tauMax <= tauMin + 2) return null;
+
+  // 차분 함수 → 누적 평균 정규화 차분(d')
+  const d = new Float32Array(tauMax + 1);
+  for (let tau = 1; tau <= tauMax; tau++) {
+    let s = 0;
+    for (let j = 0; j < w; j++) {
+      const diff = buf[j] - buf[j + tau];
+      s += diff * diff;
+    }
+    d[tau] = s;
+  }
+  const dp = new Float32Array(tauMax + 1);
+  dp[0] = 1;
+  let running = 0;
+  for (let tau = 1; tau <= tauMax; tau++) {
+    running += d[tau];
+    dp[tau] = running === 0 ? 1 : (d[tau] * tau) / running;
+  }
+
+  // 임계값 아래 첫 골짜기, 없으면 null
+  let best = -1;
+  for (let tau = tauMin; tau <= tauMax; tau++) {
+    if (dp[tau] < DIP_THRESHOLD) {
+      while (tau + 1 <= tauMax && dp[tau + 1] < dp[tau]) tau++;
+      best = tau;
+      break;
+    }
+  }
+  if (best < 0) return null;
+
+  // 포물선 보간
+  let t = best;
+  if (best > 1 && best < tauMax) {
+    const a = dp[best - 1], b = dp[best], c = dp[best + 1];
+    const den = a - 2 * b + c;
+    if (den !== 0) t = best + (a - c) / (2 * den);
+  }
+  const hz = sampleRate / t;
+  if (hz < MIN_HZ || hz > MAX_HZ) return null;
+  return { hz, confidence: Math.max(0, Math.min(1, 1 - dp[best])) };
+}
+
+function hzToCents(hz, refHz) {
+  const c = 1200 * Math.log2(hz / refHz);
+  return ((((c + 600) % 1200) + 1200) % 1200) - 600;
+}
+
+const NAMES = ['도', '도#', '레', '레#', '미', '파', '파#', '솔', '솔#', '라', '라#', '시'];
+function hzToNoteName(hz) {
+  const midi = Math.round(69 + 12 * Math.log2(hz / 440));
+  const octave = Math.floor(midi / 12) - 1;
+  return `${NAMES[((midi % 12) + 12) % 12]}${octave}`;
+}
+
+
+const MIN_VALID = 5;
+const MIN_CONF = 0.5;
+const lerp100 = (v, full, zero) => Math.max(0, Math.min(100, (100 * (zero - v)) / (zero - full)));
+
+function scorePitchTrial(samples, targetHz) {
+  const errs = [];
+  for (const s of samples) {
+    if (s && s.confidence >= MIN_CONF) errs.push(Math.abs(hzToCents(s.hz, targetHz)));
+  }
+  if (errs.length < MIN_VALID) return null;
+  errs.sort((a, b) => a - b);
+  const mid = errs.length >> 1;
+  const median = errs.length % 2 ? errs[mid] : (errs[mid - 1] + errs[mid]) / 2;
+  return lerp100(median, 25, 100);
+}
+
+function scoreBeatTrial(beatTimesMs, tapTimesMs) {
+  if (!beatTimesMs.length) return 0;
+  const taps = [...tapTimesMs].sort((a, b) => a - b);
+  const used = new Set();
+  let total = 0;
+  for (const b of beatTimesMs) {
+    const idx = taps.findIndex((t, i) => !used.has(i) && Math.abs(t - b) < 300);
+    if (idx < 0) continue;
+    used.add(idx);
+    // 같은 비트 근처의 나머지 터치는 연타로 보고 소모
+    taps.forEach((t, i) => {
+      if (i !== idx && Math.abs(t - b) < 300 && Math.abs(t - b) >= Math.abs(taps[idx] - b)) used.add(i);
+    });
+    total += lerp100(Math.abs(taps[idx] - b), 50, 300);
+  }
+  return total / beatTimesMs.length;
+}
+
+const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+
+function totalScore(pitchScores, beatScores) {
+  const p = avg(pitchScores.filter((v) => v !== null && v !== undefined));
+  const b = avg(beatScores);
+  return Math.round(0.6 * p + 0.4 * b);
+}
+
+// 기획서 10단계 등급표 (하한 점수 기준, 높은 순)
+const TIERS = [
+  [95, '걸어 다니는 인간 튜너', '"혹시 현직 가수 아니신가요?"', '음정과 박자 모두 완벽합니다. 지금 당장 오디션 프로그램에 나가셔도 손색없는 절대음감의 소유자입니다.', '🏆'],
+  [85, '우리 동네 노래방 에이스', '"회식 자리 마이크는 무조건 내 것!"', '안정적인 음정과 리듬감을 가졌습니다. 어떤 노래를 불러도 평균 이상은 해내는 타고난 음악인입니다.', '🎤'],
+  [75, '감성 충만 샤워실 가수', '"분위기와 감성으로 승부하는 타입"', '전반적으로 준수하지만 고음이나 빠른 박자에서 살짝 흔들립니다. 조금만 연습하면 주변에서 노래 잘한다는 소리를 듣습니다.', '🚿'],
+  [65, '아슬아슬 줄타기 보컬', '"맞을 듯 말 듯 심장을 쫄깃하게 만드는 매력"', '아는 노래는 잘 부르지만 처음 듣는 멜로디에는 약합니다. 반주 소리를 잘 듣고 박자를 세는 연습이 필요합니다.', '🎪'],
+  [55, '자유로운 영혼의 음유시인', '"원곡의 틀에 갇히지 않는 창조적 멜로디"', '작곡가의 의도를 벗어나 나만의 새로운 멜로디를 창조합니다. 음정보다는 열정과 성량으로 노래하는 스타일입니다.', '🎸'],
+  [45, '박자를 앞서가는 미래인', '"반주보다 한 발 앞서 나가는 트렌드세터"', '음정은 어느 정도 맞지만 박자가 빨라지거나 느려지는 경향이 있습니다. 발로 박자를 맞추며 부르는 습관을 들여보세요.', '🚀'],
+  [35, '고음 불가 땅굴파기 장인', '"높은 음만 만나면 작아지는 소심한 성대"', '저음은 안정적이나 음이 높아질수록 음정이 떨어집니다. 본인의 음역대에 맞는 낮은 키의 노래를 선곡하는 것이 핵심입니다.', '⛏️'],
+  [25, '음정 탈주범', '"집 나간 음정을 찾습니다 (현상수배)"', '머릿속으로 생각하는 음과 실제 목으로 나오는 소리에 차이가 있습니다. 내 목소리를 녹음해서 들어보는 연습부터 시작해 보세요.', '🏃'],
+  [15, '고막 테러 주의보', '"노래방 에코 100% 설정이 시급합니다"', '음정과 박자 모두 총체적 난국입니다. 하지만 노래는 실력이 아니라 즐거움입니다! 회식 자리 분위기 메이커로는 최고입니다.', '📢'],
+  [0, '전설의 음치왕', '"이 구역의 진정한 파괴자, 오히려 대단합니다!"', '일부러 틀리려고 해도 받기 힘든 기적의 점수입니다. 음악 대신 다른 분야에 엄청난 재능이 숨겨져 있을 확률이 99%입니다.', '👑'],
+];
+
+function gradeFor(score) {
+  const s = Math.max(0, Math.min(100, score));
+  const i = TIERS.findIndex(([low]) => s >= low);
+  const [, title, sub, detail, emoji] = TIERS[i];
+  return { tier: i + 1, title, sub, detail, emoji };
+}
+
+// 저작권 없는 전통/동요/고전 멜로디 (도=0 기준 반음, 가사 없음)
+const n = (semis, beats = 1) => semis.map((semitone) => ({ semitone, beats }));
+const MELODIES = [
+  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2]) },
+  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9]) },
+  { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5]) },
+  { id: 'lamb', name: '작은 양', notes: n([4, 2, 0, 2, 4, 4]) },
+  { id: 'frog', name: '개구리 노래', notes: n([0, 2, 4, 5, 4, 2]) },
+];
+
+function dailyMelody(dateStr) {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+  return MELODIES[h % MELODIES.length];
+}
+
+const KEY = 'pitch-app-v1';
+const MAX_HISTORY = 60;
+
+const defaultState = () => ({ history: [], streak: 0, lastDate: null, best: 0, resultCount: 0 });
+
+const dayNum = (s) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / 86400000);
+};
+
+function recordResult(state, dateStr, score, tier) {
+  let streak = 1;
+  if (state.lastDate === dateStr) streak = Math.max(1, state.streak);
+  else if (state.lastDate && dayNum(dateStr) - dayNum(state.lastDate) === 1) streak = state.streak + 1;
+  return {
+    history: [...state.history, { date: dateStr, score, tier }].slice(-MAX_HISTORY),
+    streak,
+    lastDate: dateStr,
+    best: Math.max(state.best, score),
+    resultCount: state.resultCount + 1,
+  };
+}
+
+// localStorage가 막혀 있어도 메모리로 동작
+function createStore(backend) {
+  let memory = defaultState();
+  const be = backend ?? (typeof localStorage !== 'undefined' ? localStorage : null);
+  return {
+    load() {
+      try {
+        const raw = be?.getItem(KEY);
+        if (raw) return { ...defaultState(), ...JSON.parse(raw) };
+      } catch { /* 폴백 */ }
+      return memory;
+    },
+    save(state) {
+      memory = state;
+      try { be?.setItem(KEY, JSON.stringify(state)); } catch { /* 무시 */ }
+    },
+  };
+}
+
+// 홈 화면 표시용: 어제나 오늘 했을 때만 연속 출석을 인정
+function activeStreak(state, todayStr) {
+  if (!state.lastDate) return 0;
+  const diff = dayNum(todayStr) - dayNum(state.lastDate);
+  return diff === 0 || diff === 1 ? state.streak : 0;
+}
+
+// 광고 목업. 앱(Capacitor) 래핑 시 이 객체의 세 메서드만 AdMob 플러그인 호출로 교체하면 된다. (AdMob 교체 지점)
+const shouldShowInterstitial = (resultCount) => resultCount > 0 && resultCount % 2 === 0;
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const Ads = {
+  delayMs: 1500,
+  banner(show) {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('.ad-banner').forEach((el) => { el.hidden = !show; });
+  },
+  async interstitial() {
+    if (typeof document !== 'undefined') await Ads._overlay('전면 광고 (목업)');
+    else await wait(this.delayMs);
+  },
+  async rewarded() {
+    if (typeof document !== 'undefined') await Ads._overlay('보상형 광고 (목업)');
+    else await wait(this.delayMs);
+    return true;
+  },
+  _overlay(label) {
+    return new Promise((resolve) => {
+      const el = document.createElement('div');
+      el.className = 'ad-overlay';
+      el.innerHTML = `<div><p>${label}</p><small>실제 앱에서는 AdMob 광고가 나옵니다</small></div>`;
+      document.body.appendChild(el);
+      setTimeout(() => { el.remove(); resolve(); }, this.delayMs);
+    });
+  },
+};
+
+
+const C3 = 130.8128;
+const C4 = 261.6256;
+let ctx = null;
+
+function getCtx() {
+  if (!ctx) {
+    const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!AC) throw new Error('MIC_UNSUPPORTED');
+    ctx = new AC();
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+const semitoneToHz = (base, semitone) => base * 2 ** (semitone / 12);
+
+// 목소리 중앙값에 가장 가까운 도(C3~C4)를 기준음으로
+function estimateRange(frames) {
+  const hzs = frames.filter((f) => f && f.confidence >= 0.5).map((f) => f.hz).sort((a, b) => a - b);
+  if (hzs.length < 5) return C4;
+  const med = hzs[hzs.length >> 1];
+  const k = Math.round(Math.log2(med / C3));
+  const base = C3 * 2 ** Math.max(0, Math.min(1, k));
+  return base;
+}
+
+async function startMic() {
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('MIC_UNSUPPORTED');
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+  } catch {
+    throw new Error('MIC_DENIED');
+  }
+  const ac = getCtx();
+  const src = ac.createMediaStreamSource(stream);
+  const analyser = ac.createAnalyser();
+  analyser.fftSize = 2048;
+  src.connect(analyser);
+  const buf = new Float32Array(analyser.fftSize);
+  const cbs = [];
+  let raf = 0;
+  let stopped = false;
+  const loop = () => {
+    if (stopped) return;
+    analyser.getFloatTimeDomainData(buf);
+    let s = 0;
+    for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    const rms = Math.sqrt(s / buf.length);
+    const r = detectPitch(buf, ac.sampleRate);
+    cbs.forEach((cb) => cb(r, rms));
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  return {
+    onFrame: (cb) => cbs.push(cb),
+    stop() {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      src.disconnect();
+      stream.getTracks().forEach((t) => t.stop());
+    },
+  };
+}
+
+function playNote(hz, durMs) {
+  const ac = getCtx();
+  const t0 = ac.currentTime;
+  const dur = durMs / 1000;
+  const gain = ac.createGain();
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  gain.connect(ac.destination);
+  [[1, 'sine', 1], [2, 'sine', 0.3], [3, 'triangle', 0.12]].forEach(([mult, type, amp]) => {
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = type;
+    o.frequency.value = hz * mult;
+    g.gain.value = amp;
+    o.connect(g).connect(gain);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  });
+  return new Promise((r) => setTimeout(r, durMs));
+}
+
+function playClick() {
+  const ac = getCtx();
+  const t0 = ac.currentTime;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.frequency.value = 1000;
+  g.gain.setValueAtTime(0.3, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+  o.connect(g).connect(ac.destination);
+  o.start(t0);
+  o.stop(t0 + 0.07);
+}
+
+
+
+
+
+
+
+
+const $ = (s) => document.querySelector(s);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const pad = (v) => String(v).padStart(2, '0');
+const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
+const store = createStore();
+let state = store.load();
+let lastMode = 'full';
+let last = null; // 마지막 결과 (공유/E2E용)
+window.__app = { get last() { return last; } };
+
+// ---------- 화면 전환 ----------
+function show(id) {
+  document.querySelectorAll('.scr').forEach((el) => { el.hidden = el.id !== id; });
+  Ads.banner(['scr-home', 'scr-result', 'scr-history'].includes(id));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => goHome()));
+
+function goHome() {
+  const s = activeStreak(state, todayStr());
+  const badge = $('#streak');
+  badge.hidden = s === 0;
+  badge.textContent = `🔥 ${s}일 연속 출석 중`;
+  $('#daily-name').textContent = `오늘의 곡: ${dailyMelody(todayStr()).name}`;
+  show('scr-home');
+}
+
+// ---------- 마이크 ----------
+let sink = null;
+async function openMic() {
+  getCtx(); // 사용자 클릭 안에서 오디오 컨텍스트 준비
+  const mic = await (window.__micOverride || startMic)();
+  mic.onFrame((r, rms) => sink && sink(r, rms, performance.now()));
+  return mic;
+}
+
+// ms 동안 프레임을 모은다. target(Hz)이 있으면 게이지를 갱신한다.
+function capture(ms, getTarget) {
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    const frames = [];
+    sink = (r, rms, t) => {
+      frames.push({ r, t: t - t0 });
+      updateGauge(r, getTarget ? getTarget() : null);
+    };
+    setTimeout(() => { sink = null; updateGauge(null, null); resolve(frames); }, ms);
+  });
+}
+
+function updateGauge(r, target) {
+  const mark = $('#gauge-mark');
+  if (!r || r.confidence < 0.5) {
+    mark.classList.remove('live');
+    $('#now-note').textContent = '—';
+    $('#cents').textContent = '';
+    return;
+  }
+  mark.classList.add('live');
+  $('#now-note').textContent = hzToNoteName(r.hz);
+  if (target) {
+    const c = hzToCents(r.hz, target);
+    const pos = 50 + Math.max(-200, Math.min(200, c)) / 4; // ±200c → 0..100%
+    mark.style.left = `${pos}%`;
+    $('#cents').textContent = Math.abs(c) < 25 ? '딱 좋아요! ✨' : c > 0 ? '조금 높아요 ↓' : '조금 낮아요 ↑';
+  } else {
+    mark.style.left = '50%';
+  }
+}
+
+// ---------- 테스트 UI 도우미 ----------
+function setStep(i, total, title, msg) {
+  $('#step-label').textContent = `${i}/${total}`;
+  $('#step-bar').style.width = `${((i - 1) / total) * 100}%`;
+  $('#test-title').textContent = title;
+  $('#test-msg').textContent = msg;
+  $('#retry-box').hidden = true;
+}
+const setMsg = (m) => { $('#test-msg').textContent = m; };
+function showView(kind) {
+  $('#pitch-view').hidden = kind !== 'pitch';
+  $('#beat-view').hidden = kind !== 'beat';
+}
+function askRetry() {
+  return new Promise((resolve) => {
+    $('#retry-box').hidden = false;
+    $('#btn-retry').onclick = () => { $('#retry-box').hidden = true; resolve('retry'); };
+    $('#btn-skip').onclick = () => { $('#retry-box').hidden = true; resolve('skip'); };
+  });
+}
+function renderNotes(count) {
+  $('#notes').innerHTML = Array.from({ length: count }, (_, i) => `<span>${i + 1}</span>`).join('');
+}
+const highlightNote = (idx) => document.querySelectorAll('#notes span').forEach((s, i) => s.classList.toggle('on', i === idx));
+
+// ---------- 단계: 음역대 ----------
+async function rangeStep(mic) {
+  show('scr-test');
+  Ads.banner(false);
+  showView('pitch');
+  renderNotes(0);
+  setStep(1, 1, '내 음역대 가늠하기', "편하게 '아~' 하고 3초간 소리 내 보세요 🎤");
+  window.__currentTargetHz = null;
+  const frames = await capture(3000, null);
+  return estimateRange(frames.filter((f) => f.t > 500).map((f) => f.r));
+}
+
+// ---------- 단계: 음정 따라하기 ----------
+async function pitchStep(idx, total, label, base, semitone) {
+  for (;;) {
+    showView('pitch');
+    renderNotes(0);
+    setStep(idx, total, `음정 따라하기 · ${label}`, '기준음을 잘 들어보세요 🎹');
+    const target = semitoneToHz(base, semitone);
+    window.__currentTargetHz = target;
+    await playNote(target, 1500);
+    setMsg('따라 불러 보세요 🎤');
+    const frames = await capture(3500, () => target);
+    const score = scorePitchTrial(frames.filter((f) => f.t > 500).map((f) => f.r), target);
+    if (score !== null) return score;
+    if ((await askRetry()) === 'skip') return null;
+  }
+}
+
+// ---------- 단계: 한 소절 ----------
+async function melodyStep(idx, total, melody, base) {
+  const hz = melody.notes.map((n) => semitoneToHz(base, n.semitone));
+  for (;;) {
+    showView('pitch');
+    renderNotes(hz.length);
+    setStep(idx, total, `한 소절 따라부르기 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
+    for (let i = 0; i < hz.length; i++) { highlightNote(i); await playNote(hz[i], 550); await sleep(100); }
+    highlightNote(-1);
+    setMsg('준비... 3초 뒤 시작!');
+    await sleep(2000);
+    setMsg('같이 불러 보세요 🎤 (불이 켜진 음을 따라서)');
+    const WIN = 1000;
+    let cur = 0;
+    window.__currentTargetHz = hz[0];
+    highlightNote(0);
+    const timer = setInterval(() => {
+      cur += 1;
+      if (cur < hz.length) { window.__currentTargetHz = hz[cur]; highlightNote(cur); }
+    }, WIN);
+    const frames = await capture(WIN * hz.length, () => hz[Math.min(cur, hz.length - 1)]);
+    clearInterval(timer);
+    highlightNote(-1);
+    const per = hz.map((target, i) => scorePitchTrial(
+      frames.filter((f) => f.t >= i * WIN + 300 && f.t < (i + 1) * WIN).map((f) => f.r), target));
+    const valid = per.filter((s) => s !== null);
+    if (valid.length >= Math.ceil(hz.length / 2)) return mean(valid);
+    if ((await askRetry()) === 'skip') return null;
+  }
+}
+
+// ---------- 단계: 박자 ----------
+async function beatStep(idx, total, intervalMs) {
+  showView('beat');
+  setStep(idx, total, '박자 맞추기', '동그라미가 테두리와 겹칠 때 화면을 톡! 👆');
+  const beats = [1500, 1500 + intervalMs, 1500 + 2 * intervalMs, 1500 + 3 * intervalMs];
+  const taps = [];
+  const t0 = performance.now();
+  window.__beatInfo = { t0, beats }; // E2E 훅
+  const onTap = () => {
+    taps.push(performance.now() - t0);
+    $('#ring').classList.add('hit');
+    setTimeout(() => $('#ring').classList.remove('hit'), 120);
+  };
+  const scr = $('#scr-test');
+  scr.addEventListener('pointerdown', onTap);
+  const pulse = $('#pulse');
+  let raf = 0;
+  const clicked = new Set();
+  const loop = () => {
+    const el = performance.now() - t0;
+    const next = beats.find((b) => b >= el - 120);
+    const remain = next === undefined ? 0 : next - el;
+    pulse.style.transform = `scale(${1 + 1.2 * Math.max(0, Math.min(1, remain / intervalMs))})`;
+    beats.forEach((b, i) => { if (el >= b && !clicked.has(i)) { clicked.add(i); playClick(); } });
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  await sleep(beats[3] + 600);
+  cancelAnimationFrame(raf);
+  scr.removeEventListener('pointerdown', onTap);
+  return scoreBeatTrial(beats, taps);
+}
+
+// ---------- 전체 진행 ----------
+let running = false;
+async function runTest(mode) {
+  if (running) return; // 더블탭으로 테스트가 겹쳐 시작되는 것을 막는다
+  running = true;
+  try { await runTestInner(mode); } finally { running = false; }
+}
+
+async function runTestInner(mode) {
+  lastMode = mode;
+  let mic;
+  try {
+    mic = await openMic();
+  } catch (e) {
+    const msg = e.message === 'MIC_UNSUPPORTED'
+      ? '이 브라우저에서는 마이크를 사용할 수 없어요. 다른 브라우저로 열어 주세요.'
+      : '마이크 사용이 막혀 있어요. 브라우저 주소창의 마이크 권한을 "허용"으로 바꿔 주세요. (클로드 미리보기 화면에서는 마이크가 막혀 있어서 배포된 페이지에서 열어야 해요.)';
+    $('#error-msg').textContent = msg;
+    show('scr-error');
+    return;
+  }
+  const pitchScores = [];
+  const beatScores = [];
+  try {
+    const base = await rangeStep(mic);
+    if (mode === 'daily') {
+      const m = dailyMelody(todayStr());
+      pitchScores.push(await melodyStep(1, 1, m, base));
+    } else {
+      const total = 6;
+      pitchScores.push(await pitchStep(1, total, '도', base, 0));
+      pitchScores.push(await pitchStep(2, total, '미', base, 4));
+      pitchScores.push(await pitchStep(3, total, '솔', base, 7));
+      pitchScores.push(await melodyStep(4, total, MELODIES[Math.floor(Math.random() * MELODIES.length)], base));
+      beatScores.push(await beatStep(5, total, 700));
+      beatScores.push(await beatStep(6, total, 500));
+    }
+  } finally {
+    mic.stop();
+  }
+  await finish(pitchScores, beatScores, mode);
+}
+
+async function finish(pitchScores, beatScores, mode) {
+  showView('pitch');
+  show('scr-loading');
+  await sleep(2000);
+  const validPitch = pitchScores.filter((s) => s !== null && s !== undefined);
+  const pitchPct = Math.round(mean(validPitch));
+  const beatPct = Math.round(mean(beatScores));
+  const score = mode === 'daily' ? pitchPct : totalScore(pitchScores, beatScores);
+  const grade = gradeFor(score);
+  state = recordResult(state, todayStr(), score, grade.tier);
+  store.save(state);
+  if (shouldShowInterstitial(state.resultCount)) await Ads.interstitial();
+  last = { score, grade, pitchPct, beatPct, mode };
+  renderResult();
+}
+
+// ---------- 결과 ----------
+function renderResult() {
+  const { score, grade, pitchPct, beatPct, mode } = last;
+  $('#r-emoji').textContent = grade.emoji;
+  $('#r-score').textContent = score;
+  $('#r-title').textContent = grade.title;
+  $('#r-sub').textContent = grade.sub;
+  $('#r-detail').textContent = grade.detail;
+  $('#r-pitch').textContent = `${pitchPct}%`;
+  $('#r-beat').textContent = mode === 'daily' ? '—' : `${beatPct}%`;
+  $('#r-streak').textContent = `${activeStreak(state, todayStr())}일`;
+  $('#unlocked').hidden = true;
+  $('#btn-unlock').hidden = false;
+  $('#share-text').hidden = true;
+  $('#btn-share').textContent = '친구에게 결과 공유하기';
+  show('scr-result');
+}
+
+const SONGS = {
+  '1020': { label: '1020 인기곡', list: ['윤도현 - 나는 나비', '버스커버스커 - 벚꽃 엔딩', '장범준 - 흔들리는 꽃들 속에서 네 샴푸향이 느껴진거야'], tip: '박자가 흔들린다면 반주에 맞춰 손뼉을 치거나 무릎을 가볍게 두드리며 리듬을 타 보세요.' },
+  '3040': { label: '3040 발라드/팝', list: ['이적 - 다행이다', '폴킴 - 모든 날, 모든 순간', '성시경 - 거리에서'], tip: '높게 느껴지면 노래방 리모컨에서 음정(키)을 2~3칸 내리고, 에코를 한 단계 올려 보세요.' },
+};
+function trotFor() {
+  const { score, pitchPct, beatPct } = last;
+  if (score >= 85) return ['임영웅 - 이제 나만 믿어요', '이찬원 - 진또배기', '송가인 - 가인이어라', '장윤정 - 초혼'];
+  if (last.mode !== 'daily' && beatPct < pitchPct) return ['박현빈 - 샤방샤방', '영탁 - 찐이야', '홍진영 - 사랑의 배터리', '장윤정 - 어머나', '김연자 - 아모르 파티'];
+  return ['설운도 - 보라빛 엽서', '나훈아 - 테스형!', '진성 - 안동역에서', '심수봉 - 사랑밖엔 난 몰라', '주현미 - 비 내리는 영동교'];
+}
+function renderSongs(tab) {
+  const data = tab === '5060'
+    ? { label: '5060 애창 트로트', list: trotFor(), tip: '숨이 차거나 박자를 놓치면 템포를 1~2단계 낮추고, 음정은 2칸 내린 뒤 에코를 넉넉히 주면 구성지게 들려요. 꺾기는 마지막 글자에서 숨을 살짝 뱉으며 반음 정도 자연스럽게 떨어뜨려 보세요.' }
+    : SONGS[tab];
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  $('#songs').innerHTML = `<ul>${data.list.map((s) => `<li>${s}</li>`).join('')}</ul><div class="tip">💡 ${data.tip}</div>`;
+}
+$('#btn-unlock').addEventListener('click', async () => {
+  const ok = await Ads.rewarded();
+  if (!ok) return;
+  $('#btn-unlock').hidden = true;
+  $('#unlocked').hidden = false;
+  $('#tabs').innerHTML = ['1020', '3040', '5060'].map((t) => `<button data-tab="${t}">${t === '5060' ? '5060 트로트' : SONGS[t].label}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => renderSongs(b.dataset.tab)));
+  renderSongs('5060');
+});
+
+// ---------- 공유 ----------
+function shareText() {
+  const { score, grade } = last;
+  const link = location.protocol.startsWith('http') ? `\n👉 ${location.href.split('#')[0]}` : '';
+  return `[내 노래 점수는? 음치 테스트 결과]\n나의 등급은 "${grade.title} (${score}점)"! 🎤\n${grade.sub} 😂\n우리 가족(친구) 중 진짜 음치는 누구일까요? 지금 바로 테스트해보세요!${link}`;
+}
+function drawCard() {
+  const c = document.createElement('canvas');
+  c.width = 1080; c.height = 1350;
+  const g = c.getContext('2d');
+  g.fillStyle = '#faf9f5'; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = '#d97757'; g.fillRect(0, 0, 1080, 220);
+  g.fillStyle = '#fff'; g.textAlign = 'center';
+  g.font = '700 64px sans-serif'; g.fillText('🎤 내 노래 점수는?', 540, 135);
+  g.font = '260px sans-serif'; g.fillText(last.grade.emoji, 540, 560);
+  g.fillStyle = '#d97757'; g.font = '800 220px sans-serif'; g.fillText(String(last.score), 540, 820);
+  g.fillStyle = '#2b2a27'; g.font = '700 66px sans-serif'; g.fillText(last.grade.title, 540, 940);
+  g.fillStyle = '#7a766d'; g.font = '400 44px sans-serif'; g.fillText(last.grade.sub.replace(/"/g, ''), 540, 1020);
+  g.fillText(`음정 ${last.pitchPct}%  ·  박자 ${last.mode === 'daily' ? '—' : last.beatPct + '%'}`, 540, 1120);
+  g.fillStyle = '#2b2a27'; g.font = '600 48px sans-serif'; g.fillText('너도 해볼래? 음치 테스트', 540, 1260);
+  return new Promise((res) => c.toBlob(res, 'image/png'));
+}
+$('#btn-share').addEventListener('click', async () => {
+  const text = shareText();
+  try {
+    const blob = await drawCard();
+    const file = new File([blob], 'my-pitch-result.png', { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    $('#btn-share').textContent = '✅ 문구를 복사했어요! 붙여넣기 하세요';
+  } catch {
+    const ta = $('#share-text');
+    ta.value = text; ta.hidden = false; ta.focus(); ta.select();
+    $('#btn-share').textContent = '아래 문구를 길게 눌러 복사하세요';
+  }
+});
+
+// ---------- 기록 ----------
+function renderHistory() {
+  $('#h-best').textContent = `${state.best}점`;
+  $('#h-count').textContent = `${state.resultCount}회`;
+  $('#h-streak').textContent = `${activeStreak(state, todayStr())}일`;
+  const rows = state.history.slice(-10).reverse();
+  $('#h-list').innerHTML = rows.length
+    ? rows.map((h) => `<div class="row"><span>${h.date.slice(5)}</span><i style="width:${Math.max(4, h.score) * 0.6}%"></i><span>${h.score}점 ${gradeFor(h.score).emoji}</span></div>`).join('')
+    : '<p class="hint">아직 기록이 없어요. 첫 테스트를 해 보세요!</p>';
+  show('scr-history');
+}
+
+// ---------- 시작 ----------
+$('#btn-full').addEventListener('click', () => runTest('full'));
+$('#btn-daily').addEventListener('click', () => runTest('daily'));
+$('#btn-again').addEventListener('click', () => runTest(lastMode));
+$('#btn-error-retry').addEventListener('click', () => runTest(lastMode));
+$('#btn-history').addEventListener('click', renderHistory);
+goHome();
+</script>
+</body>
+</html>
