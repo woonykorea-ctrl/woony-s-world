@@ -7,7 +7,7 @@ import html, os, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASE = "https://woonykorea-ctrl.github.io/woony-s-world/"
 YEAR = "2026"
-PLAY_URL = ""   # 구글 플레이 앱 출시 후 스토어 주소를 여기에 넣으면 '곧 출시'가 링크로 바뀐다.
+PLAY_URL = "https://play.google.com/store/apps/details?id=com.woonykorea.flatsunpath"   # 비워 두면 '곧 출시'로 표시된다.
 
 # ---- 시뮬레이터 목록 (여기에 추가) -------------------------------------------
 # status: "live" | "soon".  thumb: 아래 THUMBS의 키.  href는 루트 기준 파일명.
@@ -80,7 +80,7 @@ T = dict(
         lead="브라우저에서 바로 돌려 보는 3D 시뮬레이터 모음입니다. 도시를 고르고, 날짜를 움직이고, 시점을 바꿔 가며 직접 확인해 보세요.",
         cta="시뮬레이터 보기", cta2="자주 묻는 질문",
         sims_h="시뮬레이터", sims_sub="카드를 누르면 각 시뮬레이터가 열립니다.",
-        open="열기 →", soon="준비 중", play_soon="Google Play · 곧 출시", play="Google Play",
+        open="열기 →", soon="준비 중", play_soon="Google Play · 곧 출시", play="Google Play", play_get="Google Play에서 받기",
         qa_h="이런 질문에 답해요", qa_sub="질문마다 알맞은 시뮬레이터로 바로 이동할 수 있습니다.",
         go="열기", about="우니가 직접 만든 과학 시뮬레이터 모음입니다. 새 시뮬레이터가 계속 추가됩니다.",
         privacy="개인정보처리방침", lang_name="한국어", other="English", rights="© %s Woony." % YEAR,
@@ -95,7 +95,7 @@ T = dict(
         lead="A collection of 3D simulators that run right in your browser. Pick a city, move through the year, and change your viewpoint to see for yourself.",
         cta="Browse simulators", cta2="Common questions",
         sims_h="Simulators", sims_sub="Tap a card to open the simulator.",
-        open="Open →", soon="Coming soon", play_soon="Google Play · coming soon", play="Google Play",
+        open="Open →", soon="Coming soon", play_soon="Google Play · coming soon", play="Google Play", play_get="Get it on Google Play",
         qa_h="Questions we answer", qa_sub="Each question links to the simulator that shows it best.",
         go="Open", about="A growing collection of science simulators made by Woony.",
         privacy="Privacy Policy", lang_name="English", other="한국어", rights="© %s Woony." % YEAR,
@@ -167,7 +167,7 @@ def build(lang):
             actions = ['<a class="open" href="%s%s">%s</a>' % (pre, s["href"], t["open"])]
             if s["play"]:
                 if PLAY_URL:
-                    actions.append('<a class="chip" href="%s" rel="noopener">%s</a>' % (e(PLAY_URL), t["play"]))
+                    actions.append('<a class="chip play" href="%s" target="_blank" rel="noopener">%s</a>' % (e(PLAY_URL), t["play_get"]))
                 else:
                     actions.append('<span class="chip off" data-play-slot>%s</span>' % t["play_soon"])
             cards.append('<article class="card">%s<div class="body">%s%s%s<div class="actions">%s</div></div></article>' % (thumb, tag, h3, p, "".join(actions)))
@@ -182,7 +182,7 @@ def build(lang):
     ld = ('{"@context":"https://schema.org","@type":"WebSite","name":"%s","url":"%s","inLanguage":"%s"}'
           % (t["site"].replace("'", "’"), self_url, lang))
 
-    play_foot = ('<a href="%s" rel="noopener">%s</a>' % (e(PLAY_URL), t["play"])) if PLAY_URL else '<span class="off">%s</span>' % t["play_soon"]
+    play_foot = ('<a href="%s" target="_blank" rel="noopener">%s</a>' % (e(PLAY_URL), t["play"])) if PLAY_URL else '<span class="off">%s</span>' % t["play_soon"]
 
     lang_nav = ('<nav class="lang" aria-label="%s">'
                 '<a href="%s" lang="ko" hreflang="ko" data-set-lang="ko"%s>한국어</a>'
