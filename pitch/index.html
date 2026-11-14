@@ -59,7 +59,10 @@ h2{font-size:23px;margin:10px 0}
 .ladder-h{margin:26px 0 10px;font-family:var(--serif);font-size:17px}
 .ladder{display:flex;gap:10px;overflow-x:auto;padding:2px 20px 10px;margin:0 -20px;scroll-snap-type:x proximity;scroll-padding-left:20px;list-style:none;scrollbar-width:none}
 .ladder::-webkit-scrollbar{display:none}
-.ladder li{flex:0 0 112px;scroll-snap-align:start;padding:14px 10px;border:1px solid var(--line);border-radius:16px;background:var(--glass);text-align:center}
+.ladder li{flex:0 0 112px;scroll-snap-align:start}
+.ladder li button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;padding:14px 10px;border:1px solid var(--line);border-radius:16px;background:var(--glass);text-align:center;transition:border-color .2s,transform .2s}
+.ladder li button:active{transform:scale(.97);border-color:var(--gold)}
+.ladder li button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ladder .e{font-size:28px;display:block}
 .ladder b{display:block;font-size:13px;line-height:1.35;margin:6px 0 4px;font-weight:700;word-break:keep-all}
 .ladder small{color:var(--gold);font-size:12px}
@@ -124,6 +127,20 @@ h2{font-size:23px;margin:10px 0}
 #h-list .row span:first-child{width:56px;color:var(--mute)}
 
 @media (prefers-reduced-motion:reduce){.needle-g{animation:none}.spinner{animation-duration:2.4s}}
+
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheet-bg{position:absolute;inset:0;background:rgba(8,5,16,.7)}
+.sheet-card{position:relative;width:100%;max-width:520px;padding:28px 24px calc(24px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:var(--bg2);border:1px solid var(--line);text-align:center;animation:sheetUp .28s ease-out}
+.sheet-card .e{font-size:44px;display:block}
+.sheet-card h3{font-family:var(--serif);font-size:22px;margin:8px 0 4px;word-break:keep-all}
+.sheet-range{color:var(--gold);font-size:13px;margin:0 0 14px}
+.sheet-sub{font-family:var(--serif);font-size:16px;margin:0 0 12px;word-break:keep-all}
+.sheet-detail{font-size:14px;line-height:1.7;color:var(--ink);opacity:.85;margin:0 0 20px;word-break:keep-all;text-align:left}
+.sheet-close{all:unset;box-sizing:border-box;width:100%;padding:14px;border-radius:14px;background:var(--gold);color:#1b1326;font-weight:700;cursor:pointer}
+.sheet-close:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet-card{animation:none}}
 </style>
 </head>
 <body>
@@ -161,6 +178,17 @@ h2{font-size:23px;margin:10px 0}
   </div>
   <h2 class="ladder-h" style="text-align:left">10단계 등급</h2>
   <ul id="ladder" class="ladder"></ul>
+  <div id="tier-sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="tier-title">
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-card">
+      <span id="tier-emoji" class="e" aria-hidden="true"></span>
+      <h3 id="tier-title"></h3>
+      <p id="tier-range" class="sheet-range"></p>
+      <p id="tier-sub" class="sheet-sub"></p>
+      <p id="tier-detail" class="sheet-detail"></p>
+      <button type="button" class="sheet-close" data-close>닫기</button>
+    </div>
+  </div>
   <div class="ad-banner">광고 배너 (목업)</div>
 </section>
 
@@ -650,10 +678,28 @@ function buildLadder() {
   if (el.childElementCount) return;
   el.innerHTML = [100, 90, 80, 70, 60, 50, 40, 30, 20, 0].map((s) => {
     const g = gradeFor(s);
-    const low = [95, 85, 75, 65, 55, 45, 35, 25, 15, 0][g.tier - 1];
-    return `<li><span class="e">${g.emoji}</span><b>${g.title}</b><small>${low === 95 ? '95점 이상' : low === 0 ? '0~14점' : `${low}점~`}</small></li>`;
+    return `<li><button type="button" data-score="${s}" aria-label="${g.title} 자세히 보기"><span class="e">${g.emoji}</span><b>${g.title}</b><small>${rangeText(g.tier)}</small></button></li>`;
   }).join('');
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-score]');
+    if (b) openTier(Number(b.dataset.score));
+  });
+  $('#tier-sheet').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeTier(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTier(); });
 }
+const LOWS = [95, 85, 75, 65, 55, 45, 35, 25, 15, 0];
+const rangeText = (tier) => { const low = LOWS[tier - 1]; return low === 95 ? '95점 이상' : low === 0 ? '0~14점' : `${low}점~`; };
+function openTier(score) {
+  const g = gradeFor(score);
+  $('#tier-emoji').textContent = g.emoji;
+  $('#tier-title').textContent = g.title;
+  $('#tier-range').textContent = `${g.tier}단계 · ${rangeText(g.tier)}`;
+  $('#tier-sub').textContent = g.sub;
+  $('#tier-detail').textContent = g.detail;
+  $('#tier-sheet').hidden = false;
+  $('#tier-sheet .sheet-close').focus();
+}
+function closeTier() { $('#tier-sheet').hidden = true; }
 
 function goHome() {
   buildDial();
