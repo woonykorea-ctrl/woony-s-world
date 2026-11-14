@@ -66,6 +66,7 @@ input[type=range]{width:100%;margin:0;accent-color:var(--hot)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{display:inline-block;width:14px;height:0;border-top:3px solid}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.snd input{width:84px;flex:none}
 .snd{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 0 10px;font-size:12.5px;color:var(--dim)}
 .note{margin:8px 2px 0;font-size:12.5px;color:var(--dim)}
 
@@ -125,7 +126,7 @@ td b{font-weight:600}
     <button id="btnLang" class="ghost" type="button" aria-label="Language">EN</button>
   </header>
 
-  <div class="snd"><span data-i18n="sndLbl">소리</span><div class="seg" role="group" aria-label="sound"><button id="btnBgm" type="button" aria-pressed="false" data-i18n="bgm">🎵 배경음</button><button id="btnSfx" type="button" aria-pressed="false" data-i18n="sfx">🔔 효과음</button></div></div>
+  <div class="snd"><span data-i18n="sndLbl">소리</span><input id="vol" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="volume"><div class="seg" role="group" aria-label="sound"><button id="btnBgm" type="button" aria-pressed="false" data-i18n="bgm">🎵 배경음</button><button id="btnSfx" type="button" aria-pressed="false" data-i18n="sfx">🔔 효과음</button></div></div>
 
   <section class="ctrl card" aria-label="controls">
     <div class="fld">
@@ -595,17 +596,22 @@ function render() {
 
 /* ================= 소리 (Web Audio로 직접 합성, 음원 파일 없음) ================= */
 var Snd = (function () {
-  var AC = window.AudioContext || window.webkitAudioContext, ac = null, master, bgmBus, sfxBus, bgmOn = false, sfxOn = false, pad = null, chordT = 0, bellT = 0, chordI = 0;
-  var isDay = true, lastTick = 0, lastDay = null, lastDayT = 0, stopT = 0;
-  var CH = [[73.42, 220, 293.66, 369.99, 554.37], [61.74, 246.94, 293.66, 369.99, 493.88], [98, 196, 246.94, 293.66, 369.99], [55, 220, 277.18, 329.63, 440]];
-  var PENT = [587.33, 659.25, 739.99, 880, 987.77, 1108.73];
+  var AC = window.AudioContext || window.webkitAudioContext, ac = null, master, bgmBus, bgmFilt, sfxBus, noiseBuf, bgmOn = false, sfxOn = false, vol = 0.8;
+  var isDay = true, lastTick = 0, lastDay = null, lastDayT = 0, seqT = 0, nextT = 0, step = 0, playing = false;
+  var BPM = 112, E = 60 / BPM / 2;
+  /* C - Am - F - G, 한 마디 = 8분음표 8개, 4마디 = 32스텝 루프 */
+  var BASS = [130.81, 110, 87.31, 98], ARP = [[523.25, 659.25, 783.99], [440, 523.25, 659.25], [349.23, 440, 523.25], [392, 493.88, 587.33]];
+  var AP = [0, 1, 2, 1, 2, 1, 0, 1];
+  var MEL = { 0: 659.25, 2: 783.99, 4: 880, 5: 783.99, 7: 659.25, 8: 659.25, 10: 523.25, 12: 587.33, 13: 659.25, 15: 523.25, 16: 880, 18: 783.99, 20: 698.46, 22: 783.99, 24: 587.33, 26: 783.99, 28: 987.77, 29: 783.99, 31: 587.33 };
   function ensure() {
     if (!AC) return false;
     if (!ac) {
-      ac = new AC(); master = ac.createGain(); master.gain.value = 0.9;
+      ac = new AC(); master = ac.createGain(); master.gain.value = vol;
       var comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
-      bgmBus = ac.createGain(); bgmBus.gain.value = 0; bgmBus.connect(master);
-      sfxBus = ac.createGain(); sfxBus.gain.value = 0.5; sfxBus.connect(master);
+      bgmFilt = ac.createBiquadFilter(); bgmFilt.type = 'lowpass'; bgmFilt.frequency.value = isDay ? 9000 : 2200; bgmFilt.connect(master);
+      bgmBus = ac.createGain(); bgmBus.gain.value = 0; bgmBus.connect(bgmFilt);
+      sfxBus = ac.createGain(); sfxBus.gain.value = 0.7; sfxBus.connect(master);
+      noiseBuf = ac.createBuffer(1, ac.sampleRate * 0.1, ac.sampleRate); var nd = noiseBuf.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     }
     if (ac.state === 'suspended') ac.resume();
     return true;
@@ -616,48 +622,40 @@ var Snd = (function () {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.connect(g); g.connect(bus || sfxBus); o.start(t); o.stop(t + d + 0.05);
   }
-  function bell() {
-    if (!bgmOn || !ac) return;
-    var n = isDay ? PENT : PENT.slice(0, 3), f = n[Math.floor(Math.random() * n.length)];
-    tone(f, 3.6, 'sine', 0.11, 0, 0, bgmBus); tone(f * 2.76, 1.6, 'sine', 0.025, 0, 0, bgmBus);
-    bellT = setTimeout(bell, 4000 + Math.random() * 4500);
+  function hat(t0, v) {
+    var t = ac.currentTime + t0, src = ac.createBufferSource(), hp = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = noiseBuf; hp.type = 'highpass'; hp.frequency.value = 7000;
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    src.connect(hp); hp.connect(g); g.connect(bgmBus); src.start(t); src.stop(t + 0.06);
   }
-  function nextChord() {
-    if (!pad) return; chordI = (chordI + 1) % CH.length;
-    pad.oscs.forEach(function (o, i) { o.frequency.setTargetAtTime(CH[chordI][i], ac.currentTime, 1.8); });
+  function playStep(i, t) {
+    var r = t - ac.currentTime, bar = Math.floor(i / 8), k = i % 8;
+    if (k === 0 || k === 4) { tone(BASS[bar], 0.34, 'triangle', 0.42, r, 0, bgmBus); tone(120, 0.16, 'sine', 0.4, r, 45, bgmBus); }
+    if (k % 2 === 1) hat(r, 0.07);
+    tone(ARP[bar][AP[k]], 0.3, 'triangle', k === 0 ? 0.2 : 0.14, r, 0, bgmBus);
+    if (MEL[i]) { tone(MEL[i], 0.42, 'sine', 0.3, r, 0, bgmBus); tone(MEL[i] * 2, 0.2, 'sine', 0.04, r, 0, bgmBus); }
   }
-  function startPad() {
-    if (pad) return;
-    var filt = ac.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = isDay ? 900 : 450; filt.Q.value = 0.6;
-    var lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 220; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
-    var out = ac.createGain(); out.gain.value = 0.16; filt.connect(out); out.connect(bgmBus);
-    var oscs = CH[chordI].map(function (f, i) {
-      var o = ac.createOscillator(), g = ac.createGain(); o.type = i === 0 ? 'sine' : 'triangle'; o.frequency.value = f; o.detune.value = (i % 2 ? 1 : -1) * (3 + i);
-      g.gain.value = i === 0 ? 0.9 : 0.45; o.connect(g); g.connect(filt); o.start(); return o;
-    });
-    pad = { filt: filt, lfo: lfo, oscs: oscs };
-    chordT = setInterval(nextChord, 14000); bellT = setTimeout(bell, 2500);
-  }
-  function stopPad() {
-    clearInterval(chordT); clearTimeout(bellT); if (!pad) return;
-    pad.oscs.forEach(function (o) { try { o.stop(); } catch (e) {} }); try { pad.lfo.stop(); } catch (e) {} pad = null;
+  function sched() {
+    if (!playing) return;
+    if (nextT < ac.currentTime) nextT = ac.currentTime + 0.05;
+    while (nextT < ac.currentTime + 0.3) { playStep(step, nextT); nextT += E; step = (step + 1) % 32; }
   }
   return {
     bgm: function (on) {
       bgmOn = on; if (!ensure()) return on;
-      clearTimeout(stopT);
-      if (on) { startPad(); bgmBus.gain.setTargetAtTime(0.9, ac.currentTime, 1.2); }
-      else { bgmBus.gain.setTargetAtTime(0, ac.currentTime, 0.3); stopT = setTimeout(function () { if (!bgmOn) stopPad(); }, 1800); }
+      if (on) { if (!playing) { playing = true; step = 0; nextT = ac.currentTime + 0.1; seqT = setInterval(sched, 80); } bgmBus.gain.cancelScheduledValues(ac.currentTime); bgmBus.gain.setTargetAtTime(1, ac.currentTime, 0.1); }
+      else { bgmBus.gain.setTargetAtTime(0, ac.currentTime, 0.15); setTimeout(function () { if (!bgmOn) { playing = false; clearInterval(seqT); } }, 900); }
       return on;
     },
     sfx: function (on) { sfxOn = on; if (!ensure()) return on; if (on) { tone(659, 0.18, 'sine', 0.4, 0); tone(988, 0.3, 'sine', 0.3, 0.08); } return on; },
+    vol: function (v) { vol = v; if (master) master.gain.setTargetAtTime(v, ac.currentTime, 0.05); },
     play: function (on) { if (!sfxOn || !ac) return; if (on) { tone(523, 0.16, 'sine', 0.45, 0); tone(784, 0.24, 'sine', 0.45, 0.09); } else { tone(659, 0.14, 'sine', 0.4, 0); tone(440, 0.24, 'sine', 0.4, 0.09); } },
     tick: function (v) { if (!sfxOn || !ac) return; var n = performance.now(); if (n - lastTick < 55) return; lastTick = n; tone(380 + v * 520, 0.07, 'triangle', 0.22); },
     click: function () { if (!sfxOn || !ac) return; tone(700, 0.06, 'triangle', 0.2, 0, 480); },
     chime: function () { if (!sfxOn || !ac) return; tone(880, 0.5, 'sine', 0.32, 0); tone(1318.5, 0.6, 'sine', 0.2, 0.07); },
     mood: function (day) {
       isDay = day;
-      if (pad) pad.filt.frequency.setTargetAtTime(day ? 900 : 450, ac.currentTime, 2);
+      if (bgmFilt) bgmFilt.frequency.setTargetAtTime(day ? 9000 : 2200, ac.currentTime, 1.5);
       if (lastDay !== null && lastDay !== day && sfxOn && ac) {
         var n = performance.now();
         if (n - lastDayT > 500) { lastDayT = n; (day ? [392, 523, 659, 784] : [784, 659, 523, 392]).forEach(function (f, i) { tone(f, 0.45, 'sine', 0.28, i * 0.1); }); }
@@ -716,6 +714,7 @@ function init() {
   var bB = $('btnBgm'), bS = $('btnSfx');
   bB.addEventListener('click', function () { var on = bB.getAttribute('aria-pressed') !== 'true'; bB.setAttribute('aria-pressed', Snd.bgm(on)); });
   bS.addEventListener('click', function () { var on = bS.getAttribute('aria-pressed') !== 'true'; bS.setAttribute('aria-pressed', Snd.sfx(on)); });
+  $('vol').addEventListener('input', function (e) { Snd.vol(+e.target.value); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) Snd.suspend(); else Snd.resume(); });
   var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(render, 60); });
   applyLang();
