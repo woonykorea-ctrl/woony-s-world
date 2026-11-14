@@ -141,6 +141,13 @@ h2{font-size:23px;margin:10px 0}
 .sheet-close:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.sheet-card{animation:none}}
+
+#pitch-view{position:relative}
+#cue{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:96px;font-weight:700;color:var(--gold);background:rgba(15,10,27,.82);border-radius:20px;pointer-events:none}
+#cue[hidden]{display:none}
+#cue.pop{animation:cuePop .5s ease-out}
+@keyframes cuePop{from{transform:scale(1.5);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#cue.pop{animation:none}}
 </style>
 </head>
 <body>
@@ -206,6 +213,7 @@ h2{font-size:23px;margin:10px 0}
   <h2 id="test-title"></h2>
   <p id="test-msg" class="msg"></p>
   <div id="pitch-view">
+    <div id="cue" hidden aria-live="assertive"></div>
     <div id="notes"></div>
     <div id="gauge"><div id="gauge-mid"></div><div id="gauge-mark"></div></div>
     <div id="now-note">—</div>
@@ -394,12 +402,9 @@ function gradeFor(score) {
 
 // 저작권 없는 전통/동요/고전 멜로디 (도=0 기준 반음, 가사 없음)
 const n = (semis, beats = 1) => semis.map((semitone) => ({ semitone, beats }));
+// 누구나 아는 곡 하나만 사용 (모르는 노래는 따라 부르기 어렵다)
 const MELODIES = [
-  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2, 0, 2, 4, 5, 7, 7]) },
-  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0]) },
   { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4]) },
-  { id: 'lamb', name: '작은 양', notes: n([4, 2, 0, 2, 4, 4, 4, 2, 2, 2, 4, 7]) },
-  { id: 'frog', name: '개구리 노래', notes: n([0, 2, 4, 5, 4, 2, 0, 4, 5, 7, 9, 7]) },
 ];
 
 // 기준음 위에서 한 번 들려주는 도레미파솔라시도
@@ -407,11 +412,8 @@ const SCALE = [0, 2, 4, 5, 7, 9, 11, 12].map((semitone, i) => ({
   semitone, label: ['도', '레', '미', '파', '솔', '라', '시', '도'][i],
 }));
 
-function dailyMelody(dateStr) {
-  let h = 0;
-  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) >>> 0;
-  h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
-  return MELODIES[h % MELODIES.length];
+function dailyMelody() {
+  return MELODIES[0];
 }
 
 // 맞춤 애창곡: 조건별 후보 곡 풀에서 매번 일부를 섞어 뽑는다 (재방문 때마다 추천이 달라짐)
@@ -882,6 +884,11 @@ async function pitchStep(idx, total, label, base, semitone) {
 }
 
 // ---------- 단계: 한 소절 ----------
+const setCue = (t) => { // 화면 가운데 큰 시작 신호 (3, 2, 1, 시작!)
+  const e = $('#cue');
+  e.textContent = t; e.hidden = !t;
+  e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop');
+};
 const NOTE_MS = 800; // 듣기·부르기 모두 같은 속도
 async function melodyStep(idx, total, melody, base) {
   const hz = melody.notes.map((n) => semitoneToHz(base, n.semitone));
@@ -891,8 +898,11 @@ async function melodyStep(idx, total, melody, base) {
     setStep(idx, total, `한 소절 따라부르기 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
     for (let i = 0; i < hz.length; i++) { highlightNote(i); await playNote(hz[i], NOTE_MS - 100); await sleep(100); }
     highlightNote(-1);
-    setMsg('준비... 3초 뒤 시작!');
-    await sleep(2000);
+    // 시작 신호: 3-2-1 카운트(같은 속도의 딱! 소리) 뒤 '시작!'
+    setMsg('이제 따라 부를 차례예요! 3-2-1 뒤에 시작해요 🎤');
+    for (const c of ['3', '2', '1']) { setCue(c); playClick(); await sleep(NOTE_MS); }
+    setCue('시작!');
+    setTimeout(() => setCue(''), 900);
     setMsg('"라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
     const WIN = NOTE_MS;
     let cur = 0;
@@ -904,6 +914,7 @@ async function melodyStep(idx, total, melody, base) {
     }, WIN);
     const frames = await capture(WIN * hz.length, () => hz[Math.min(cur, hz.length - 1)]);
     clearInterval(timer);
+    setCue('');
     highlightNote(-1);
     const per = hz.map((target, i) => scorePitchTrial(
       frames.filter((f) => f.t >= i * WIN + 300 && f.t < (i + 1) * WIN).map((f) => f.r), target));
