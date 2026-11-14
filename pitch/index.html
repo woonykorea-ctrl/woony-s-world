@@ -87,8 +87,9 @@ h2{font-size:23px;margin:10px 0}
 .bar{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
 #pitch-view{padding-top:7vh}
-#notes{display:flex;gap:8px;justify-content:center;margin:16px 0;min-height:34px}
-#notes span{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mute)}
+#notes{display:flex;gap:4px;justify-content:center;margin:16px 0;min-height:34px}
+#notes span{flex:1 1 0;min-width:0;max-width:34px;height:30px;border-radius:15px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mute)}
+#notes span.long{flex-grow:2;max-width:68px}
 #notes span.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:800;transform:scale(1.2)}
 #gauge{position:relative;height:56px;margin:28px 4px 10px;border-radius:28px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(90deg,rgba(196,106,126,.35),rgba(127,200,160,.28) 40%,rgba(127,200,160,.28) 60%,rgba(196,106,126,.35))}
 #gauge-mid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--ok);transform:translateX(-50%)}
@@ -453,12 +454,24 @@ function gradeFor(score) {
 
 // 저작권 없는 전통/동요/고전 멜로디 (도=0 기준 반음, 가사 없음)
 const n = (semis, beats = 1) => semis.map((semitone) => ({ semitone, beats }));
+const nb = (pairs) => pairs.map(([semitone, beats]) => ({ semitone, beats }));
 // 누구나 아는 곡 3개 중에서 고른다 (모르는 노래는 따라 부르기 어렵다)
 const MELODIES = [
   { id: 'ode', name: '환희의 송가', notes: n([4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4]) },
-  { id: 'nabiya', name: '나비야', notes: n([7, 4, 4, 5, 2, 2, 0, 2, 4, 5, 7, 7]) },
-  { id: 'twinkle', name: '반짝반짝 작은 별', notes: n([0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0]) },
+  // 실제 노래의 박자: 박자 값 2 = 길게 끄는 음
+  { id: 'nabiya', name: '나비야', notes: nb([[7, 1], [4, 1], [4, 2], [5, 1], [2, 1], [2, 2], [0, 1], [2, 1], [4, 1], [5, 1], [7, 1], [7, 1], [7, 2]]) },
+  { id: 'twinkle', name: '반짝반짝 작은 별', notes: nb([[0, 1], [0, 1], [7, 1], [7, 1], [9, 1], [9, 1], [7, 2], [5, 1], [5, 1], [4, 1], [4, 1], [2, 1], [2, 1], [0, 2]]) },
 ];
+
+// 박자 값에 맞춘 시간표 (재생·불 켜짐·채점 칸이 모두 같은 표를 쓴다)
+function melodyTimeline(notes, noteMs) {
+  let t = 0;
+  return notes.map((x) => {
+    const seg = { semitone: x.semitone, beats: x.beats, start: t, end: t + x.beats * noteMs };
+    t = seg.end;
+    return seg;
+  });
+}
 
 // 기준음 위에서 한 번 들려주는 도레미파솔라시도
 const SCALE = [0, 2, 4, 5, 7, 9, 11, 12].map((semitone, i) => ({
@@ -887,8 +900,8 @@ function askRetry(frames) {
     $('#btn-skip').onclick = () => { $('#retry-box').hidden = true; resolve('skip'); };
   });
 }
-function renderNotes(count) {
-  $('#notes').innerHTML = Array.from({ length: count }, (_, i) => `<span>${i + 1}</span>`).join('');
+function renderNotes(count, notes) {
+  $('#notes').innerHTML = Array.from({ length: count }, (_, i) => `<span${notes && notes[i].beats > 1 ? ' class="long"' : ''}>${i + 1}</span>`).join('');
 }
 const highlightNote = (idx) => document.querySelectorAll('#notes span').forEach((s, i) => s.classList.toggle('on', i === idx));
 
@@ -969,9 +982,14 @@ async function melodyStep(idx, total, melody, base) {
   const hz = melody.notes.map((n) => semitoneToHz(base, n.semitone));
   for (;;) {
     showView('pitch');
-    renderNotes(hz.length);
+    renderNotes(hz.length, melody.notes);
     setStep(idx, total, `한 소절 따라부르기 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
-    for (let i = 0; i < hz.length; i++) { highlightNote(i); await playNote(hz[i], NOTE_MS - 100); await sleep(100); }
+    const tl = melodyTimeline(melody.notes, NOTE_MS); // 실제 박자(길게 끄는 음 포함)
+    for (let i = 0; i < hz.length; i++) {
+      highlightNote(i);
+      await playNote(hz[i], tl[i].end - tl[i].start - 100);
+      await sleep(100);
+    }
     highlightNote(-1);
     // 시작 신호: 3-2-1 카운트(같은 속도의 딱! 소리) 뒤 '시작!'
     setMsg('이제 따라 부를 차례예요! 3-2-1 뒤에 시작해요 🎤');
@@ -979,20 +997,18 @@ async function melodyStep(idx, total, melody, base) {
     setCue(''); // 큰 숫자는 1에서 끝내서 첫 음의 불이 가려지지 않게 한다
     playClick(); // 네 번째 박자 = 첫 음이 시작되는 박자
     setMsg('시작! "라라라"로 이어서 불러 보세요 🎤 (불이 켜진 음을 따라서)');
-    const WIN = NOTE_MS;
     let cur = 0;
     window.__currentTargetHz = hz[0];
     highlightNote(0);
-    const timer = setInterval(() => {
-      cur += 1;
-      if (cur < hz.length) { window.__currentTargetHz = hz[cur]; highlightNote(cur); }
-    }, WIN);
-    const frames = await capture(WIN * hz.length, () => hz[Math.min(cur, hz.length - 1)]);
-    clearInterval(timer);
+    const timers = tl.slice(1).map((seg, k) => setTimeout(() => {
+      cur = k + 1; window.__currentTargetHz = hz[cur]; highlightNote(cur);
+    }, seg.start));
+    const frames = await capture(tl[tl.length - 1].end, () => hz[cur]);
+    timers.forEach(clearTimeout);
     setCue('');
     highlightNote(-1);
     const per = hz.map((target, i) => scorePitchTrial(
-      frames.filter((f) => f.t >= i * WIN + 300 && f.t < (i + 1) * WIN).map((f) => f.r), target));
+      frames.filter((f) => f.t >= tl[i].start + 300 && f.t < tl[i].end).map((f) => f.r), target));
     const valid = per.filter((s) => s !== null);
     if (valid.length >= Math.ceil(hz.length / 2)) return mean(valid);
     if ((await askRetry(frames)) === 'skip') return null;
