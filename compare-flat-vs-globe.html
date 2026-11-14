@@ -623,8 +623,8 @@ var Snd = (function () {
     if (pad) return;
     var filt = ac.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = isDay ? 720 : 380; filt.Q.value = 0.7;
     var lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.06; lg.gain.value = 160; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
-    var out = ac.createGain(); out.gain.value = 0.15; filt.connect(out); out.connect(bgmBus);
-    var sw = ac.createOscillator(), swg = ac.createGain(); sw.frequency.value = 0.045; swg.gain.value = 0.03; sw.connect(swg); swg.connect(out.gain); sw.start();
+    var out = ac.createGain(); out.gain.value = 0.2; filt.connect(out); out.connect(bgmBus);
+    var sw = ac.createOscillator(), swg = ac.createGain(); sw.frequency.value = 0.045; swg.gain.value = 0.04; sw.connect(swg); swg.connect(out.gain); sw.start();
     var oscs = [];
     CH[chordI].forEach(function (f, i) {
       [-1, 1].forEach(function (sg) {
@@ -644,13 +644,13 @@ var Snd = (function () {
   function swell() {
     if (!pad) return;
     var f = CH[chordI][2 + Math.floor(Math.random() * 3)] * 2, t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
-    o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.025, t + 3); g.gain.linearRampToValueAtTime(0.0001, t + 7.5);
+    o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.033, t + 3); g.gain.linearRampToValueAtTime(0.0001, t + 7.5);
     o.connect(g); g.connect(bgmBus); o.start(t); o.stop(t + 8); swT = setTimeout(swell, 5500 + Math.random() * 4000);
   }
   function sched() {
     if (!playing) return;
     if (nextT < ac.currentTime) nextT = ac.currentTime + 0.05;
-    while (nextT < ac.currentTime + 0.3) { if (pulse) tone(72, 0.5, 'sine', beatN % 4 === 0 ? 0.3 : 0.2, nextT - ac.currentTime, 42, bgmBus); beatN++; nextT += BEAT; }
+    while (nextT < ac.currentTime + 0.3) { if (pulse) tone(72, 0.5, 'sine', beatN % 4 === 0 ? 0.4 : 0.27, nextT - ac.currentTime, 42, bgmBus); beatN++; nextT += BEAT; }
   }
   return {
     bgm: function (on) {
