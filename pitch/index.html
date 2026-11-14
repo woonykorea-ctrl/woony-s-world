@@ -495,9 +495,15 @@ async function startMic() {
   const stream = await getStream();
   const ac = getCtx();
   const src = ac.createMediaStreamSource(stream);
+  // 80Hz 이하(손에 쥘 때의 진동, 바람, 에어컨 소리)를 걷어내야 목소리의 음높이가 묻히지 않는다
+  const hp = ac.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 80;
+  hp.Q.value = 0.707;
   const analyser = ac.createAnalyser();
   analyser.fftSize = 2048;
-  src.connect(analyser);
+  src.connect(hp);
+  hp.connect(analyser);
   const buf = new Float32Array(analyser.fftSize);
   const cbs = [];
   let raf = 0;
@@ -519,6 +525,7 @@ async function startMic() {
       stopped = true;
       cancelAnimationFrame(raf);
       src.disconnect();
+      hp.disconnect();
     },
   };
 }
@@ -640,10 +647,26 @@ function capture(ms, getTarget) {
     const frames = [];
     sink = (r, rms, t) => {
       frames.push({ r, rms, t: t - t0 });
+      debugInfo(r, rms, frames);
       updateGauge(r, getTarget ? getTarget() : null);
     };
     setTimeout(() => { sink = null; updateGauge(null, null); resolve(frames); }, ms);
   });
+}
+
+// 주소 끝에 #debug 를 붙이면 화면 아래에 실시간 마이크 수치를 보여준다 (문제 확인용)
+const DEBUG = location.hash.includes('debug');
+function debugInfo(r, rms, frames) {
+  if (!DEBUG) return;
+  let el = $('#dbg');
+  if (!el) {
+    el = document.createElement('pre');
+    el.id = 'dbg';
+    el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;margin:0;padding:8px 12px;background:rgba(0,0,0,.85);color:#9f9;font:12px/1.4 monospace;z-index:50;white-space:pre-wrap';
+    document.body.appendChild(el);
+  }
+  const voiced = frames.filter((f) => f.r && f.r.confidence >= 0.5).length;
+  el.textContent = `음량(rms) ${rms.toFixed(4)}  최대 ${maxRms(frames).toFixed(4)}\n음높이 ${r ? r.hz.toFixed(1) + 'Hz (신뢰 ' + r.confidence.toFixed(2) + ')' : '못 잡음'}\n잡힌 프레임 ${voiced}/${frames.length}`;
 }
 
 function updateGauge(r, target) {
