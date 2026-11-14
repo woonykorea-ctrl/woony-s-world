@@ -95,6 +95,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .seg button:last-child{border-right:0}
 .seg button:hover{color:var(--text)}
 .seg button.on{background:rgba(255,162,74,.18);color:var(--hot);font-weight:700}
+#bgmVol{width:84px;flex:0 0 auto}
 
 #hint{position:fixed;left:20px;bottom:calc(var(--barH,130px) + 28px + var(--sab));font-size:11px;color:#59617a;pointer-events:none}
 
@@ -247,6 +248,10 @@ button.ghost.now:hover{background:rgba(255,162,74,.14);color:var(--hot);border-c
         <button data-v="tilt" class="on" data-i18n="vTilt">비스듬히 보기</button>
         <button data-v="auto" id="btnAuto" data-i18n="vAuto">자동 회전</button>
       </div>
+    </div>
+    <div class="group" id="bgmGroup"><label data-i18n="lblBgm">배경음악</label>
+      <div class="seg"><button id="btnBgm" aria-pressed="false">♪ 음악 꺼짐</button></div>
+      <input id="bgmVol" type="range" min="0" max="100" step="1" value="40" data-i18n-aria="bgmVolAria" aria-label="배경음악 음량">
     </div>
   </div>
 </section>
@@ -1387,6 +1392,7 @@ FE.STR = {
     now: '지금 시각으로', nowT: '오늘 날짜와 {city} 현지 시각으로 맞추고 실시간으로 재생',
     lblRange: '빛 범위(km)', rDist: '거리 10,008', rDistT: '태양 바로 밑에서 90°(10,008 km)', rReal: '실제 근사 11,300', rRealT: '실제 지구의 낮·밤과 가장 잘 맞는 범위(11,300 km). 204개 도시 기준 약 92% 일치', rArea: '면적 14,150', rAreaT: '원판 면적의 절반(14,150 km)',
     lblView: '시점', vTop: '위에서 보기', vTilt: '비스듬히 보기', vAuto: '자동 회전',
+    lblBgm: '배경음악', bgmOff: '♪ 음악 꺼짐', bgmOn: '♪ 음악 켜짐', bgmVolAria: '배경음악 음량',
     hint: '드래그: 회전 · 휠/핀치: 확대 · 우클릭 드래그: 이동', moreOpen: '설정 ▾', moreClosed: '설정 ▴', moreAria: '설정 열기/닫기',
     dateF: '{m}월 {d}일', latN: '북위 {v}°', latS: '남위 {v}°', eq: '적도 0.00°', lang: 'English', langBtn: 'EN',
     north: '북극', lbB: '북회귀선 B', lbE: '적도', lbC: '남회귀선 C', lbEdge: '가장자리 = 남극', east: '동',
@@ -1409,6 +1415,7 @@ FE.STR = {
     now: 'Set to now', nowT: "Jump to today's date and the current local time in {city}, and play in real time",
     lblRange: 'Light range (km)', rDist: 'Distance 10,008', rDistT: '90° from the point below the sun (10,008 km)', rReal: 'Best fit 11,300', rRealT: "The range that best matches real day and night (11,300 km): about 92% agreement across 204 cities", rArea: 'Area 14,150', rAreaT: 'Half of the disc area (14,150 km)',
     lblView: 'View', vTop: 'Top view', vTilt: 'Tilted view', vAuto: 'Auto-rotate',
+    lblBgm: 'Music', bgmOff: '♪ Music off', bgmOn: '♪ Music on', bgmVolAria: 'Music volume',
     hint: 'Drag: rotate · Wheel/pinch: zoom · Right-drag: pan', moreOpen: 'Settings ▾', moreClosed: 'Settings ▴', moreAria: 'Open or close settings',
     dateF: '{m} {d}', latN: '{v}° N', latS: '{v}° S', eq: 'Equator 0.00°', lang: '한국어', langBtn: '한',
     north: 'North Pole', lbB: 'Cancer B', lbE: 'Equator', lbC: 'Capricorn C', lbEdge: 'Edge = Antarctica', east: 'E',
@@ -1969,6 +1976,55 @@ FE.createControls = (state, cam, onChange, onRange, onRing) => {
 
 </script>
 <script>
+/* ===== 배경음악 (v1.1): 기본은 꺼짐, 켜면 기기에 저장 · 앱이 백그라운드로 가면 자동 정지 ===== */
+(function () {
+  var btn = document.getElementById('btnBgm'), vol = document.getElementById('bgmVol');
+  if (!btn || !vol || !window.FE) return;
+  var audio = null, want = false, started = false, fadeT = 0;
+  var store = FE.store;
+  var savedVol = parseInt(store.get('bgmVol'), 10);
+  vol.value = isNaN(savedVol) ? 40 : Math.max(0, Math.min(100, savedVol));
+  function level() { return Math.pow(vol.value / 100, 1.6) * 0.9; }        // 낮은 음량에서 세밀하게
+  function label() {
+    btn.textContent = FE.t(want ? 'bgmOn' : 'bgmOff');
+    btn.classList.toggle('on', want); btn.setAttribute('aria-pressed', want);
+  }
+  function ensure() { if (!audio) { audio = new Audio('audio/bgm_loop.ogg'); audio.loop = true; audio.preload = 'auto'; audio.volume = 0; } return audio; }
+  function fadeTo(target, done) {
+    clearInterval(fadeT); var a = ensure();
+    fadeT = setInterval(function () {
+      var d = target - a.volume;
+      if (Math.abs(d) < 0.02) { a.volume = target; clearInterval(fadeT); done && done(); }
+      else a.volume = Math.max(0, Math.min(1, a.volume + Math.sign(d) * 0.03));
+    }, 40);
+  }
+  function play() {
+    var a = ensure(), p = a.play();
+    started = true; fadeTo(level());
+    if (p && p.catch) p.catch(function () { started = false; });               // 정책상 막히면 다음 터치에서 다시 시도
+  }
+  function stop() { if (!audio) return; fadeTo(0, function () { audio.pause(); }); }
+  btn.onclick = function () {
+    want = !want; store.set('bgm', want ? '1' : '0'); label();
+    if (want) play(); else stop();
+  };
+  vol.oninput = function () { store.set('bgmVol', vol.value); if (audio && want) { clearInterval(fadeT); audio.volume = level(); } };
+  document.addEventListener('visibilitychange', function () {
+    if (!audio) return;
+    if (document.hidden) { clearInterval(fadeT); audio.pause(); }
+    else if (want) play();
+  });
+  addEventListener('pagehide', function () { if (audio) audio.pause(); });
+  /* 이전에 켜 두었다면, 첫 터치 때 이어서 재생(자동 재생은 허용되지 않으므로) */
+  if (store.get('bgm') === '1') {
+    want = true;
+    var once = function () { removeEventListener('pointerdown', once, true); if (want && !started) play(); };
+    addEventListener('pointerdown', once, true);
+  }
+  var orig = FE.applyI18n;                                                  // 언어를 바꾸면 버튼 글자도 바꾼다
+  FE.applyI18n = function () { orig.apply(this, arguments); label(); };
+  label();
+})();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !window.Capacitor) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
