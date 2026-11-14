@@ -148,6 +148,10 @@ h2{font-size:23px;margin:10px 0}
 #cue.pop{animation:cuePop .5s ease-out}
 @keyframes cuePop{from{transform:scale(1.5);opacity:.2}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){#cue.pop{animation:none}}
+
+.hero h1 .hot{color:#ff5d6c}
+#btn-full{background:linear-gradient(180deg,#ff7a85,#e8384f 55%,#bf2540);color:#fff;box-shadow:0 12px 34px -10px rgba(232,56,79,.75),inset 0 1px 0 rgba(255,255,255,.35)}
+#btn-full:active{background:linear-gradient(180deg,#ff7a85,#e8384f 55%,#bf2540);filter:brightness(.93)}
 </style>
 </head>
 <body>
@@ -164,7 +168,7 @@ h2{font-size:23px;margin:10px 0}
       <text x="150" y="173" text-anchor="middle">딱 맞아요</text>
       <text x="274" y="170" text-anchor="end">높아요</text>
     </svg>
-    <h1>나도 가수가<br>될 수 있을까?</h1>
+    <h1>나도 <span class="hot">가수</span>가<br>될 수 있을까?</h1>
     <p class="sub">음치부터 가수까지 10단계, 기준음을 듣고 따라 부르면 등급을 알려 드려요.</p>
   </div>
   <button id="btn-full" class="btn primary cta">테스트 시작</button>
