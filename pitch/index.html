@@ -1431,6 +1431,7 @@ function renderSongs(tab) {
 }
 $('#btn-unlock').addEventListener('click', async () => {
   const ok = await Ads.rewarded();
+  lastAdAt = Date.now(); // 보상형도 광고이므로, 직후에 전면 광고가 연달아 나오지 않게 간격을 센다
   if (!ok) return;
   $('#btn-unlock').hidden = true;
   $('#unlocked').hidden = false;
