@@ -11,7 +11,7 @@
   --sans:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg2);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg2);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
 body{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%) fixed}
 #app{overflow-x:clip;max-width:480px;margin:0 auto;padding:18px 20px calc(28px + env(safe-area-inset-bottom));min-height:100vh}
 .scr[hidden]{display:none}
@@ -220,6 +220,8 @@ h2{font-size:23px;margin:10px 0}
 #beat-intro-lines li{font-size:17px;line-height:1.6;text-align:center;word-break:keep-all}
 #beat-intro .btns{display:flex;flex-direction:column;gap:10px}
 @media (prefers-reduced-motion:reduce){.demo-ring,.demo-ring i{animation:none}}
+/* 앱에서 AdMob 배너가 화면 아래에 겹쳐 뜰 때 내용이 가려지지 않게 */
+body.banner-on{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -649,7 +651,7 @@ function activeStreak(state, todayStr) {
   return diff === 0 || diff === 1 ? state.streak : 0;
 }
 
-// 광고 목업. 앱(Capacitor) 래핑 시 이 객체의 세 메서드만 AdMob 플러그인 호출로 교체하면 된다. (AdMob 교체 지점)
+// 광고 계층. 웹에서는 광고 없음(#mockads 를 붙이면 목업 화면), 안드로이드 앱(Capacitor)에서는 AdMob.
 // 전면 광고 정책: 점수 화면 전에는 절대 넣지 않는다. 첫 테스트는 무광고,
 // 이후 '테스트를 시작하기 전'에 2번에 한 번, 직전 광고와 최소 간격을 둔다.
 const INTERSTITIAL_MIN_GAP_MS = 120000;
@@ -657,21 +659,116 @@ const shouldShowInterstitial = (completedCount, nowMs, lastAdMs) =>
   completedCount > 0 && completedCount % 2 === 1
   && (lastAdMs == null || nowMs - lastAdMs >= INTERSTITIAL_MIN_GAP_MS);
 
+
+// ★ 출시 전에 이 값만 바꾸면 됩니다. testing:true 와 구글 테스트 ID는 개발용입니다.
+//   실제 광고 단위 ID를 넣고 testing 을 false 로 바꾼 뒤 `node app/scripts/prepare-www.mjs --release` 로 확인하세요.
+const ADMOB = {
+  testing: true,
+  banner: 'ca-app-pub-3940256099942544/6300978111',
+  interstitial: 'ca-app-pub-3940256099942544/1033173712',
+  rewarded: 'ca-app-pub-3940256099942544/5224354917',
+};
+
+const resolveAdMode = ({ native, hash }) => (native ? 'native' : String(hash || '').includes('mockads') ? 'mock' : 'off');
+
+// 지정한 AdMob 이벤트 중 하나가 오면 그 이름으로 끝나는 약속. 광고를 띄우기 전에 먼저 걸어 둔다.
+async function waitForAny(plugin, names) {
+  let done;
+  const p = new Promise((r) => { done = r; });
+  const handles = await Promise.all(names.map((n) => plugin.addListener(n, () => done(n))));
+  return { done: p, off: () => handles.forEach((h) => h && h.remove && h.remove()) };
+}
+const withTimeout = async (p, ms) => { let t; try { return await Promise.race([p, new Promise((r) => { t = setTimeout(() => r(null), ms); })]); } finally { clearTimeout(t); } };
+
+// AdMob 플러그인 호출. 광고가 실패해도 테스트 흐름은 절대 막지 않는다.
+function createNativeAds(plugin, cfg = ADMOB) {
+  let ready = null;
+  const init = () => (ready ||= (async () => {
+    try {
+      const info = await plugin.requestConsentInfo();
+      if (info && info.isConsentFormAvailable && info.status === 'REQUIRED') await plugin.showConsentForm();
+    } catch (e) { /* 동의 정보를 못 받아도 계속 */ }
+    try { await plugin.initialize({ initializeForTesting: cfg.testing }); } catch (e) { /* 계속 */ }
+  })());
+  let chain = Promise.resolve();
+  const serial = (fn) => (chain = chain.then(fn, fn));
+  let bannerState = 'none';
+  return {
+    async interstitial() {
+      await init();
+      let w;
+      try {
+        w = await waitForAny(plugin, ['onInterstitialAdDismissed', 'onInterstitialAdFailedToShow']);
+        await plugin.prepareInterstitial({ adId: cfg.interstitial, isTesting: cfg.testing });
+        await plugin.showInterstitial();
+        await withTimeout(w.done, 60000);
+      } catch (e) { /* 광고 실패는 무시 */ } finally { if (w) w.off(); }
+    },
+    // 보상을 받았을 때만 true. 광고를 못 불러오거나 못 띄우면 시청자 탓이 아니므로 true(관대하게 통과).
+    async rewarded() {
+      await init();
+      let w;
+      try {
+        w = await waitForAny(plugin, ['onRewardedVideoAdDismissed', 'onRewardedVideoAdFailedToShow']);
+        await plugin.prepareRewardVideoAd({ adId: cfg.rewarded, isTesting: cfg.testing });
+        const earned = plugin.showRewardVideoAd().then(() => true);
+        const r = await Promise.race([earned, w.done.then((n) => n === 'onRewardedVideoAdFailedToShow')]);
+        return r;
+      } catch (e) { return true; } finally { if (w) w.off(); }
+    },
+    banner(show) {
+      return serial(async () => {
+        await init();
+        try {
+          if (show) {
+            if (bannerState === 'none') await plugin.showBanner({ adId: cfg.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: cfg.testing });
+            else if (bannerState === 'hidden') await plugin.resumeBanner();
+            bannerState = 'shown';
+          } else if (bannerState === 'shown') { await plugin.hideBanner(); bannerState = 'hidden'; }
+        } catch (e) { /* 배너 실패는 무시 */ }
+      });
+    },
+  };
+}
+
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const Ads = {
   delayMs: 1500,
+  mode: null,
+  _native: null,
+  _init() {
+    if (this.mode) return;
+    const cap = typeof window !== 'undefined' ? window.Capacitor : null;
+    const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    this.mode = resolveAdMode({ native, hash: typeof location !== 'undefined' ? location.hash : '' });
+    if (this.mode === 'native') {
+      if (cap.Plugins && cap.Plugins.AdMob) this._native = createNativeAds(cap.Plugins.AdMob, ADMOB);
+      else this.mode = 'off';
+    }
+  },
   banner(show) {
-    if (typeof document === 'undefined') return;
-    document.querySelectorAll('.ad-banner').forEach((el) => { el.hidden = !show; });
+    this._init();
+    if (typeof document !== 'undefined') {
+      // 웹 목업 배너 자리는 목업 모드에서만 보인다. 앱에서는 AdMob 배너가 화면 아래에 겹쳐 뜬다.
+      document.querySelectorAll('.ad-banner').forEach((el) => { el.hidden = !(this.mode === 'mock' && show); });
+      document.body.classList.toggle('banner-on', this.mode === 'native' && !!show);
+    }
+    if (this.mode === 'native') this._native.banner(show);
   },
   async interstitial() {
-    if (typeof document !== 'undefined') await Ads._overlay('전면 광고 (목업)');
-    else await wait(this.delayMs);
+    this._init();
+    if (this.mode === 'native') return this._native.interstitial();
+    if (this.mode === 'mock' && typeof document !== 'undefined') return Ads._overlay('전면 광고 (목업)');
+    if (this.mode === 'mock') return wait(this.delayMs);
   },
   async rewarded() {
-    if (typeof document !== 'undefined') await Ads._overlay('보상형 광고 (목업)');
-    else await wait(this.delayMs);
+    this._init();
+    if (this.mode === 'native') return this._native.rewarded();
+    if (this.mode === 'mock') {
+      if (typeof document !== 'undefined') await Ads._overlay('보상형 광고 (목업)');
+      else await wait(this.delayMs);
+    }
     return true;
   },
   _overlay(label) {
@@ -1097,7 +1194,7 @@ async function melodyStep(idx, total, melody, base) {
   for (;;) {
     showView('pitch');
     renderNotes(hz.length, melody.notes);
-    setStep(idx, total, `한 소절 따라부르기 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
+    setStep(idx, total, `한 소절 · ${melody.name}`, '먼저 멜로디를 들어보세요 🎹');
     const tl = melodyTimeline(melody.notes, NOTE_MS); // 실제 박자(길게 끄는 음 포함)
     for (let i = 0; i < hz.length; i++) {
       highlightNote(i);
